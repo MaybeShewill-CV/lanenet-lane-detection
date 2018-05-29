@@ -1,9 +1,12 @@
 # LaneNet-Lane-Detection
-Use tensorflow to implement a Deep Neural Network for real time lane detection mainly based on the paper "Towards 
-End-to-End Lane Detection: an Instance Segmentation Approach".You can 
-refer to their paper for details https://arxiv.org/abs/1802.05591. 
-This model consists of a encoder-decoder stage, binary semantic segmentation stage and instance semantic segmentation 
-using discriminative loss function for real time lane detection task.
+Use tensorflow to implement a Deep Neural Network for real time lane detection mainly based on the IEEE IV conference 
+paper "Towards End-to-End Lane Detection: an Instance Segmentation Approach".You can refer to their paper for details 
+https://arxiv.org/abs/1802.05591. This model consists of a encoder-decoder stage, binary semantic segmentation stage 
+and instance semantic segmentation using discriminative loss function for real time lane detection task.
+
+The main network architecture is as follows:
+`Network Architecture`
+![NetWork_Architecture](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/network_architecture.png)
 
 ## Installation
 This software has only been tested on ubuntu 16.04(x64), python3.5, cuda-8.0, cudnn-6.0 with a GTX-1070 GPU. 
@@ -105,3 +108,4 @@ The accuracy during training process rises as follows:
 - [ ] Add a embedding visualization tools to visualize the embedding feature map
 - [ ] Add detailed explanation of training the components of lanenet separately.
 - [ ] Training the model on different dataset
+- [ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model
