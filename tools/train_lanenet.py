@@ -171,7 +171,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
         # 加载预训练参数
         if net_flag == 'vgg':
             pretrained_weights = np.load(
-                '/home/baidu/Silly_Project/ICode/baidu/beec/semantic-road-estimation/data/vgg16.npy',
+                './data/vgg16.npy',
                 encoding='latin1').item()
 
             for vv in tf.trainable_variables():
