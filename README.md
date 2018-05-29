@@ -15,7 +15,7 @@ pip3 install -r requirements.txt
 ```
 
 ## Test model
-In this repo I uploaded a model trained on tusimple lane dataset[Tusimple_Lane_Detection](http://benchmark.tusimple.ai/#/). 
+In this repo I uploaded a model trained on tusimple lane dataset [Tusimple_Lane_Detection](http://benchmark.tusimple.ai/#/). 
 You can test a single image on the trained model as follows
 
 ```
@@ -30,11 +30,11 @@ The results are as follows:
 `Test Lane Mask Image`
 ![Test Lane_Mask](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_mask_result.jpg)
 `Test Lane Binary Segmentation Image`
-![Test Lane_Binary_Seg](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_binary_seg.png)
+![Test Lane_Binary_Seg](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_binary_seg.png)
 `Test Lane Instance Segmentation Image`
-![Test Lane_Instance_Seg](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_instance_seg.png)
+![Test Lane_Instance_Seg](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_instance_seg.png)
 `Test Lane Instance Embedding Image`
-![Test Lane_Embedding](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_embedding.png)
+![Test Lane_Embedding](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_embedding.png)
 
 If you want to test the model on a whole dataset you may call
 ```
@@ -46,7 +46,7 @@ If you set the save_dir argument the result will be saved in that folder or the 
 displayed during the inference process holding on 3 seconds per image. I test the model on the whole tusimple lane 
 detection dataset and make it a video. You may catch a glimpse of it bellow.
 `Tusimple test dataset gif`
-![tusimple_batch_test_gif](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_batch_test.gif)
+![tusimple_batch_test_gif](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_batch_test.gif)
 
 ## Train your own model
 #### Data Preparation
