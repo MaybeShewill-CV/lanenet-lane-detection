@@ -22,6 +22,11 @@ pip3 install -r requirements.txt
 In this repo I uploaded a model trained on tusimple lane dataset [Tusimple_Lane_Detection](http://benchmark.tusimple.ai/#/).
 The deep neural network inference part can achieve around a 50fps which is similar to the description in the paper. But
 the input pipeline I implemented now need to be improved to achieve a real time lane detection system.
+
+The trained lanenet model weights files are stored in 
+[dropbox_lanenet_model_file](https://www.dropbox.com/sh/2ptlvq4u1qzs46n/AAAwKhXEHkxew8HJMGXWciyda?dl=0). You can 
+download the model and put them in folder model/tusimple_lanenet/
+
 You can test a single image on the trained model as follows
 
 ```
