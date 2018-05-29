@@ -118,7 +118,6 @@ def test_lanenet(image_path, weights_path, use_gpu):
         # mask_image = cv2.resize(mask_image, (image_vis.shape[1], image_vis.shape[0]),
         #                         interpolation=cv2.INTER_LINEAR)
 
-        # plt.ion()
         plt.figure('mask_image')
         plt.imshow(mask_image[:, :, (2, 1, 0)])
         plt.figure('src_image')
@@ -128,7 +127,6 @@ def test_lanenet(image_path, weights_path, use_gpu):
         plt.figure('binary_image')
         plt.imshow(binary_seg_image[0] * 255, cmap='gray')
         plt.show()
-        # plt.pause(3.0)
 
     sess.close()
 
