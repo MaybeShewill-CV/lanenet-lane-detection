@@ -32,6 +32,7 @@ python tools/test_lanenet.py --is_batch False --batch_size 1
 The results are as follows:
 
 `Test Input Image`
+
 ![Test Input](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/tusimple_test_image/0.jpg)
 
 `Test Lane Mask Image`
