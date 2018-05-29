@@ -68,13 +68,13 @@ instance use different pixel value to represent different lane field and 0 for t
 All your training image will be scaled into the same scale according to the config file.
 
 #### Train model
-The whole training epoches are 200010 in my experiment. I trained the model with a batch size 4, initialized learning 
-rate is 0.0001 and decrease by multiply 0.96 every 5000 epochs. About training parameters you can check the 
-global_configuration/config.py for details. You can switch --net argument to change the base encoder stage. If you 
-choose --net vgg then the vgg16 will be used as the base encoder stage and a pretrained parameters will be loaded and if
-you choose --net dense then the dense net will be used as the base encoder stage instead and no pretrained parameters 
-will be loaded. And you can modified the training script to load your own pretrained parameters or you can implement 
-your own base encoder stage. To train your own model by
+In my experiment the training epochs are 94000, batch size is 4, initialized learning rate is 0.0001 and decrease by 
+multiply 0.96 every 5000 epochs. About training parameters you can check the global_configuration/config.py for details. 
+You can switch --net argument to change the base encoder stage. If you choose --net vgg then the vgg16 will be used as 
+the base encoder stage and a pretrained parameters will be loaded and if you choose --net dense then the dense net will 
+be used as the base encoder stage instead and no pretrained parameters will be loaded. And you can modified the training 
+script to load your own pretrained parameters or you can implement your own base encoder stage. 
+You may call the following script to train your own model
 
 ```
 python tools/train_lanenet.py --net vgg --dataset_dir data/training_data_example/
@@ -101,4 +101,5 @@ The accuracy during training process rises as follows:
 
 ## TODO
 - [ ] Add a embedding visualization tools to visualize the embedding feature map
+- [ ] Add detailed explanation of training the components of lanenet separately.
 - [ ] Training the model on different dataset
