@@ -44,15 +44,17 @@ def init_args():
     parser.add_argument('--is_batch', type=str, help='If test a batch of images', default='false')
     parser.add_argument('--batch_size', type=int, help='The batch size of the test images', default=32)
     parser.add_argument('--save_dir', type=str, help='Test result image save dir', default=None)
+    parser.add_argument('--use_gpu', type=int, help='If use gpu set 1 or 0 instead', default=1)
 
     return parser.parse_args()
 
 
-def test_lanenet(image_path, weights_path):
+def test_lanenet(image_path, weights_path, use_gpu):
     """
 
     :param image_path:
     :param weights_path:
+    :param use_gpu:
     :return:
     """
     assert ops.exists(image_path), '{:s} not exist'.format(image_path)
@@ -76,7 +78,10 @@ def test_lanenet(image_path, weights_path):
     saver = tf.train.Saver()
 
     # Set sess configuration
-    sess_config = tf.ConfigProto(device_count={'GPU': 0})
+    if use_gpu:
+        sess_config = tf.ConfigProto(device_count={'GPU': 1})
+    else:
+        sess_config = tf.ConfigProto(device_count={'GPU': 0})
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.TEST.GPU_MEMORY_FRACTION
     sess_config.gpu_options.allow_growth = CFG.TRAIN.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
@@ -107,7 +112,7 @@ def test_lanenet(image_path, weights_path):
                 scale = 255 / ele_mex[i]
             instance_seg_image[0][:, :, i] *= int(scale)
         embedding_image = np.array(instance_seg_image[0], np.uint8)
-        cv2.imwrite('embedding_mask.png', embedding_image)
+        # cv2.imwrite('embedding_mask.png', embedding_image)
 
         # mask_image = cluster.get_lane_mask_v2(instance_seg_ret=embedding_image)
         # mask_image = cv2.resize(mask_image, (image_vis.shape[1], image_vis.shape[0]),
@@ -130,12 +135,13 @@ def test_lanenet(image_path, weights_path):
     return
 
 
-def test_lanenet_batch(image_dir, weights_path, batch_size, save_dir=None):
+def test_lanenet_batch(image_dir, weights_path, batch_size, use_gpu, save_dir=None):
     """
 
     :param image_dir:
     :param weights_path:
     :param batch_size:
+    :param use_gpu:
     :param save_dir:
     :return:
     """
@@ -157,7 +163,10 @@ def test_lanenet_batch(image_dir, weights_path, batch_size, save_dir=None):
     saver = tf.train.Saver()
 
     # Set sess configuration
-    sess_config = tf.ConfigProto(device_count={'GPU': 1})
+    if use_gpu:
+        sess_config = tf.ConfigProto(device_count={'GPU': 1})
+    else:
+        sess_config = tf.ConfigProto(device_count={'GPU': 0})
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.TEST.GPU_MEMORY_FRACTION
     sess_config.gpu_options.allow_growth = CFG.TRAIN.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
@@ -195,14 +204,16 @@ def test_lanenet_batch(image_dir, weights_path, batch_size, save_dir=None):
                 mask_image = cv2.resize(mask_image, (image_vis_list[index].shape[1],
                                                      image_vis_list[index].shape[0]),
                                         interpolation=cv2.INTER_LINEAR)
-                # plt.ion()
-                # plt.figure('mask_image')
-                # plt.imshow(mask_image[:, :, (2, 1, 0)])
-                # plt.figure('src_image')
-                # plt.imshow(image_vis_list[index][:, :, (2, 1, 0)])
-                # plt.pause(3.0)
-                # plt.show()
-                # plt.ioff()
+
+                if save_dir is None:
+                    plt.ion()
+                    plt.figure('mask_image')
+                    plt.imshow(mask_image[:, :, (2, 1, 0)])
+                    plt.figure('src_image')
+                    plt.imshow(image_vis_list[index][:, :, (2, 1, 0)])
+                    plt.pause(3.0)
+                    plt.show()
+                    plt.ioff()
 
                 mask_image = cv2.addWeighted(image_vis_list[index], 1.0, mask_image, 1.0, 0)
 
@@ -210,6 +221,7 @@ def test_lanenet_batch(image_dir, weights_path, batch_size, save_dir=None):
                     image_name = ops.split(image_path_epoch[index])[1]
                     image_save_path = ops.join(save_dir, image_name)
                     cv2.imwrite(image_save_path, mask_image)
+                    log.info('[Epoch:{:d}] Detection image {:s} complete'.format(epoch, image_name))
 
     sess.close()
 
@@ -221,13 +233,13 @@ if __name__ == '__main__':
     args = init_args()
 
     if args.save_dir is not None and not ops.exists(args.save_dir):
-        log.error('{:s} not exist and has been made')
+        log.error('{:s} not exist and has been made'.format(args.save_dir))
         os.makedirs(args.save_dir)
 
     if args.is_batch.lower() == 'false':
         # test hnet model on single image
-        test_lanenet(args.image_path, args.weights_path)
+        test_lanenet(args.image_path, args.weights_path, args.use_gpu)
     else:
         # test hnet model on a batch of image
         test_lanenet_batch(image_dir=args.image_path, weights_path=args.weights_path,
-                           save_dir=args.save_dir, batch_size=args.batch_size)
+                           save_dir=args.save_dir, use_gpu=args.use_gpu, batch_size=args.batch_size)
