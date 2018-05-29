@@ -29,15 +29,19 @@ The results are as follows:
 ![Test Input](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/tusimple_test_image/0.jpg)
 
 `Test Lane Mask Image`
+
 ![Test Lane_Mask](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_mask_result.png)
 
 `Test Lane Binary Segmentation Image`
+
 ![Test Lane_Binary_Seg](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_binary_seg.png)
 
 `Test Lane Instance Segmentation Image`
+
 ![Test Lane_Instance_Seg](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_instance_seg.png)
 
 `Test Lane Instance Embedding Image`
+
 ![Test Lane_Embedding](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_embedding.png)
 
 If you want to test the model on a whole dataset you may call
@@ -82,17 +86,17 @@ python tools/train_lanenet.py --net vgg --dataset_dir data/training_data_example
 
 You may monitor the training process using tensorboard tools
 
-During my experiment the `Total loss` drops as follows  
+During my experiment the `Total loss` drops as follows:  
 ![Training loss](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/total_loss.png)
 
-The `Binary Segmentation loss` drops as follows  
+The `Binary Segmentation loss` drops as follows:  
 ![Training binary_seg_loss](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/binary_seg_loss.png)
 
-The `Instance Segmentation loss` drops as follows  
+The `Instance Segmentation loss` drops as follows:  
 ![Training instance_seg_loss](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/instance_seg_loss.png)
 
 ## Experiment
-The accuracy during training process rises as follows  
+The accuracy during training process rises as follows: 
 ![Training accuracy](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/accuracy.png)
 
 ## TODO
