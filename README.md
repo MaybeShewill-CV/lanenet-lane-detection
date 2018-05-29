@@ -26,15 +26,15 @@ python tools/test_lanenet.py --is_batch False --batch_size 1
 The results are as follows:
 
 `Test Input Image`
-![Test Input](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/test_output.png)
+![Test Input](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/tusimple_test_image/0.jpg)
 `Test Lane Mask Image`
-![Test Lane_Mask](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/test_output.png)
+![Test Lane_Mask](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/lanenet_mask_result.jpg)
 `Test Lane Binary Segmentation Image`
-![Test Lane_Binary_Seg](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/test_output.png)
+![Test Lane_Binary_Seg](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_binary_seg.png)
 `Test Lane Instance Segmentation Image`
-![Test Lane_Instance_Seg](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/test_output.png)
+![Test Lane_Instance_Seg](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_instance_seg.png)
 `Test Lane Instance Embedding Image`
-![Test Lane_Embedding](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/test_output.png)
+![Test Lane_Embedding](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_embedding.png)
 
 If you want to test the model on a whole dataset you may call
 ```
@@ -45,8 +45,8 @@ python tools/test_lanenet.py --is_batch True --batch_size 2 --save_dir data/tusi
 If you set the save_dir argument the result will be saved in that folder or the result will not be saved but be 
 displayed during the inference process holding on 3 seconds per image. I test the model on the whole tusimple lane 
 detection dataset and make it a video. You may catch a glimpse of it bellow.
-`Tusimple test dataset video`
-![tusimple_test_video]()
+`Tusimple test dataset gif`
+![tusimple_batch_test_gif](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/source_image/lanenet_batch_test.gif)
 
 ## Train your own model
 #### Data Preparation
@@ -79,15 +79,15 @@ python tools/train_lanenet.py --net vgg --dataset_dir data/training_data_example
 You may monitor the training process using tensorboard tools
 
 During my experiment the `Total loss` drops as follows  
-![Training loss](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/train_loss.png)
+![Training loss](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/total_loss.png)
 The `Binary Segmentation loss` drops as follows  
-![Training binary_seg_loss](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/seq_distance.png)
+![Training binary_seg_loss](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/binary_seg_loss.png)
 The `Instance Segmentation loss` drops as follows  
-![Training instance_seg_loss](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/seq_distance.png)
+![Training instance_seg_loss](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/instance_seg_loss.png)
 
 ## Experiment
 The accuracy during training process rises as follows  
-![Training accuracy](https://github.com/TJCVRS/CRNN_Tensorflow/blob/master/data/images/training_accuracy.md)
+![Training accuracy](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/accuracy.png)
 
 ## TODO
 - [ ] Add a embedding visualization tools to visualize the embedding feature map
