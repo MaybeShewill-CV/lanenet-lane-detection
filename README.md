@@ -5,6 +5,7 @@ https://arxiv.org/abs/1802.05591. This model consists of a encoder-decoder stage
 and instance semantic segmentation using discriminative loss function for real time lane detection task.
 
 The main network architecture is as follows:
+
 `Network Architecture`
 ![NetWork_Architecture](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/network_architecture.png)
 
