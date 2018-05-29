@@ -1,0 +1,1 @@
+/home/baidu/DataBase/Semantic_Segmentation/TUSimple_Lane_Detection/training/image/0005.png /home/baidu/DataBase/Semantic_Segmentation/TUSimple_Lane_Detection/training/gt_image_binary/0005.png /home/baidu/DataBase/Semantic_Segmentation/TUSimple_Lane_Detection/training/gt_image_instance/0005.png
