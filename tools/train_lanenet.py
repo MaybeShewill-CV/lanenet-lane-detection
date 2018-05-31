@@ -63,20 +63,19 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
     val_dataset = lanenet_data_processor.DataSet(val_dataset_file)
 
     input_tensor = tf.placeholder(dtype=tf.float32,
-                                  shape=[None, CFG.TRAIN.IMG_HEIGHT,
+                                  shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
                                          CFG.TRAIN.IMG_WIDTH, 3],
                                   name='input_tensor')
     binary_label_tensor = tf.placeholder(dtype=tf.int64,
-                                         shape=[None, CFG.TRAIN.IMG_HEIGHT,
+                                         shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
                                                 CFG.TRAIN.IMG_WIDTH, 1],
                                          name='binary_input_label')
     instance_label_tensor = tf.placeholder(dtype=tf.float32,
-                                           shape=[None, CFG.TRAIN.IMG_HEIGHT,
+                                           shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
                                                   CFG.TRAIN.IMG_WIDTH],
                                            name='instance_input_label')
     phase = tf.placeholder(dtype=tf.string, shape=None, name='net_phase')
 
-    # net = lanenet_instance_segmentation.LaneNetInstanceSeg(net_flag=net_flag, phase=phase)
     net = lanenet_merge_model.LaneNet(net_flag=net_flag, phase=phase)
 
     # calculate the loss
@@ -112,15 +111,15 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
 
     # Set tf saver
     saver = tf.train.Saver()
-    model_save_dir = 'model/lanenet'
+    model_save_dir = 'model/culane_lanenet'
     if not ops.exists(model_save_dir):
         os.makedirs(model_save_dir)
     train_start_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-    model_name = 'lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
+    model_name = 'culane_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
     model_save_path = ops.join(model_save_dir, model_name)
 
     # Set tf summary
-    tboard_save_path = 'tboard/lanenet/{:s}'.format(net_flag)
+    tboard_save_path = 'tboard/culane_lanenet/{:s}'.format(net_flag)
     if not ops.exists(tboard_save_path):
         os.makedirs(tboard_save_path)
     train_cost_scalar = tf.summary.scalar(name='train_cost', tensor=total_loss)
