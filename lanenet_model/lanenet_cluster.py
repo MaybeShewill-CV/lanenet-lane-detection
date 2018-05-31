@@ -104,6 +104,20 @@ class LaneNetCluster(object):
         return np.array(lane_embedding_feats, np.float32), np.array(lane_coordinate, np.int64)
 
     @staticmethod
+    def _thresh_coord(coord):
+        """
+        过滤实例车道线位置坐标点,假设车道线是连续的, 因此车道线点的坐标变换应该是平滑变化的不应该出现跳变
+        :param coord: [(x, y)]
+        :return:
+        """
+        pts_x = coord[:, 0]
+        mean_x = np.mean(pts_x)
+
+        idx = np.where(np.abs(pts_x - mean_x) < mean_x)
+
+        return coord[idx[0]]
+
+    @staticmethod
     def _lane_fit(lane_pts):
         """
         车道线多项式拟合
@@ -134,54 +148,6 @@ class LaneNetCluster(object):
             finally:
                 return zip(x_fit, y_fit)
 
-    def get_lane_mask_v2(self, instance_seg_ret):
-        """
-
-        :param instance_seg_ret:
-        :return:
-        """
-        # ele_mex = np.max(instance_seg_ret, axis=(0, 1))
-        # for i in range(3):
-        #     if ele_mex[i] == 0:
-        #         scale = 1
-        #     else:
-        #         scale = 255 / ele_mex[i]
-        #         instance_seg_ret[:, :, i] *= int(scale)
-
-        instance_seg_feats = np.reshape(
-            instance_seg_ret, newshape=[instance_seg_ret.shape[0] * instance_seg_ret.shape[1],
-                                        instance_seg_ret.shape[2]])
-        num_clusters, labels, cluster_centers = self._cluster(instance_seg_feats, bandwidth=1.5)
-        # num_clusters, labels, cluster_centers = self._cluster_v2(instance_seg_feats)
-        labels = np.array(labels, dtype=np.uint8).reshape([instance_seg_ret.shape[0],
-                                                           instance_seg_ret.shape[1]])
-
-        # 聚类簇超过八个则选择其中类内样本最多的八个聚类簇保留下来
-        if num_clusters > 8:
-            cluster_sample_nums = []
-            for i in range(num_clusters):
-                cluster_sample_nums.append(len(np.where(labels == i)[0]))
-            sort_idx = np.argsort(-np.array(cluster_sample_nums, np.int64))
-            cluster_index = np.array(range(num_clusters))[sort_idx[0:8]]
-        else:
-            cluster_index = range(num_clusters)
-
-        mask_image = np.zeros(shape=[instance_seg_ret.shape[0], instance_seg_ret.shape[1], 3], dtype=np.uint8)
-
-        for index, i in enumerate(cluster_index):
-            idx = np.where(labels == i)
-            # coord = [coord[:, 1], coord[:, 0]]
-            color = (int(self._color_map[index][0]),
-                     int(self._color_map[index][1]),
-                     int(self._color_map[index][2]))
-            pts = np.stack([idx[0], idx[1]], axis=1)
-            pts = np.flip(pts, axis=1)
-            pts = np.array([pts], np.int64)
-            # cv2.polylines(img=mask_image, pts=pts, isClosed=False, color=color, thickness=2)
-            mask_image[idx] = color
-
-        return mask_image
-
     def get_lane_mask(self, binary_seg_ret, instance_seg_ret):
         """
 
@@ -208,6 +174,7 @@ class LaneNetCluster(object):
         for index, i in enumerate(cluster_index):
             idx = np.where(labels == i)
             coord = lane_coordinate[idx]
+            # coord = self._thresh_coord(coord)
             coord = np.flip(coord, axis=1)
             # coord = (coord[:, 0], coord[:, 1])
             color = (int(self._color_map[index][0]),
@@ -220,9 +187,9 @@ class LaneNetCluster(object):
         return mask_image
 
 if __name__ == '__main__':
-    binary_seg_image = cv2.imread('binary_seg_img.png', cv2.IMREAD_UNCHANGED)
+    binary_seg_image = cv2.imread('binary_ret.png', cv2.IMREAD_GRAYSCALE)
     binary_seg_image[np.where(binary_seg_image == 255)] = 1
-    instance_seg_image = cv2.imread('embedding.png', cv2.IMREAD_UNCHANGED)
+    instance_seg_image = cv2.imread('instance_ret.png', cv2.IMREAD_UNCHANGED)
     ele_mex = np.max(instance_seg_image, axis=(0, 1))
     for i in range(3):
         if ele_mex[i] == 0:
@@ -232,7 +199,7 @@ if __name__ == '__main__':
         instance_seg_image[:, :, i] *= int(scale)
     embedding_image = np.array(instance_seg_image, np.uint8)
     cluster = LaneNetCluster()
-    mask_image = cluster.get_lane_mask_v2(instance_seg_ret=instance_seg_image)
+    mask_image = cluster.get_lane_mask(instance_seg_ret=instance_seg_image, binary_seg_ret=binary_seg_image)
     plt.figure('embedding')
     plt.imshow(embedding_image[:, :, (2, 1, 0)])
     plt.figure('mask_image')
