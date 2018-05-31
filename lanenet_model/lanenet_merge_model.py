@@ -88,9 +88,22 @@ class LaneNet(cnn_basenet.CNNBaseModel):
             inference_ret = self._build_model(input_tensor=input_tensor, name='inference')
             # 计算二值分割损失函数
             decode_logits = inference_ret['logits']
-            binary_segmenatation_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                logits=decode_logits, labels=tf.squeeze(binary_label, squeeze_dims=[3]),
-                name='entropy_loss')
+            decode_logits_reshape = tf.reshape(
+                decode_logits,
+                shape=[decode_logits.get_shape().as_list()[0],
+                       decode_logits.get_shape().as_list()[1] * decode_logits.get_shape().as_list()[2],
+                       decode_logits.get_shape().as_list()[3]])
+            binary_label = tf.squeeze(binary_label, squeeze_dims=[3])
+            binary_label_reshape = tf.reshape(
+                binary_label,
+                shape=[binary_label.get_shape().as_list()[0],
+                       binary_label.get_shape().as_list()[1] * binary_label.get_shape().as_list()[2]])
+            binary_label_reshape = tf.one_hot(binary_label_reshape, depth=2)
+            # binary_segmenatation_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            #     logits=decode_logits, labels=tf.squeeze(binary_label, squeeze_dims=[3]),
+            #     name='entropy_loss')
+            binary_segmenatation_loss = tf.nn.softmax_cross_entropy_with_logits(
+                labels=binary_label_reshape, logits=decode_logits_reshape, name='entropy_loss')
             binary_segmenatation_loss = tf.reduce_mean(binary_segmenatation_loss)
             # 计算discriminative loss损失函数
             decode_deconv = inference_ret['deconv']
@@ -105,7 +118,7 @@ class LaneNet(cnn_basenet.CNNBaseModel):
                     pix_embedding, instance_label, 3, image_shape, 0.5, 1.5, 1.0, 1.0, 0.001)
 
             # 合并损失
-            total_loss = 0.5 * binary_segmenatation_loss + 0.5 * disc_loss
+            total_loss = 0.7 * binary_segmenatation_loss + 0.3 * disc_loss
 
             ret = {
                 'total_loss': total_loss,
