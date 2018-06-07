@@ -111,6 +111,8 @@ The `Instance Segmentation loss` drops as follows:
 The accuracy during training process rises as follows: 
 ![Training accuracy](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/accuracy.png)
 
+Please cite my repo[Github_Repo](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you find it helps you.
+
 ## TODO
 - [ ] Add a embedding visualization tools to visualize the embedding feature map
 - [ ] Add detailed explanation of training the components of lanenet separately.
