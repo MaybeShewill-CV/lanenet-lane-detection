@@ -86,8 +86,14 @@ class LaneNetBinarySeg(cnn_basenet.CNNBaseModel):
             inference_ret = self.build_model(input_tensor=input_tensor, name='inference')
             # 计算损失
             decode_logits = inference_ret['logits']
+            # 加入bounded inverse class weights
+            inverse_class_weights = tf.divide(1.0,
+                                              tf.log(tf.add(tf.constant(1.02, tf.float32),
+                                                            tf.nn.softmax(decode_logits))))
+            decode_logits_weighted = tf.multiply(decode_logits, inverse_class_weights)
+
             loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                logits=decode_logits, labels=tf.squeeze(label, squeeze_dims=[3]),
+                logits=decode_logits_weighted, labels=tf.squeeze(label, squeeze_dims=[3]),
                 name='entropy_loss')
 
             ret = dict()
