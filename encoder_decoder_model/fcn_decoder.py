@@ -62,18 +62,18 @@ class FCNDecoder(cnn_basenet.CNNBaseModel):
                 fused = tf.add(deconv, score, name='fuse_{:d}'.format(i + 1))
                 score = fused
 
-                if self._is_training:
-                    score = self.spatial_dropout(input_tensor=score, keep_prob=0.5,
-                                                 name='fuse_{:d}_spatial_dropout'.format(i + 1))
+                score = self.spatial_dropout(input_tensor=score, keep_prob=0.5,
+                                             is_training=self._is_training,
+                                             name='fuse_{:d}_sp_dropout'.format(i + 1))
 
             deconv_final = self.deconv2d(inputdata=score, out_channel=64, kernel_size=16,
                                          stride=8, use_bias=False, name='deconv_final')
 
             score_final = self.conv2d(inputdata=deconv_final, out_channel=2,
                                       kernel_size=1, use_bias=False, name='score_final')
-            if self._is_training:
-                score_final = self.spatial_dropout(input_tensor=score_final, keep_prob=0.5,
-                                                   name='finale_spatial_dropout')
+            score_final = self.spatial_dropout(input_tensor=score_final, keep_prob=0.5,
+                                               is_training=self._is_training,
+                                               name='finale_spatial_dropout')
 
             ret['logits'] = score_final
             ret['deconv'] = deconv_final
