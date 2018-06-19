@@ -444,32 +444,48 @@ class CNNBaseModel(object):
         return ret
 
     @staticmethod
-    def spatial_dropout(input_tensor, keep_prob, name, seed=1234):
+    def spatial_dropout(input_tensor, keep_prob, is_training, name, seed=1234):
         """
         空间dropout实现
         :param input_tensor:
         :param keep_prob:
+        :param is_training:
         :param name:
         :param seed:
         :return:
         """
-        with tf.variable_scope(name):
-            # get the batch size and number of feature maps
-            num_feature_maps = [tf.shape(input_tensor)[0], tf.shape(input_tensor)[3]]
+        def f1():
+            """
 
-            # get some uniform noise between keep_prob and 1 + keep_prob
-            random_tensor = keep_prob
-            random_tensor += tf.random_uniform(num_feature_maps,
-                                               seed=seed,
-                                               dtype=input_tensor.dtype)
+            :return:
+            """
+            return input_tensor
 
-            # if we take the floor of this, we get a binary matrix where
-            # (1-keep_prob)% of the values are 0 and the rest are 1
-            binary_tensor = tf.floor(random_tensor)
+        def f2():
+            """
 
-            # Reshape to multiply our feature maps by this tensor correctly
-            binary_tensor = tf.reshape(binary_tensor,
-                                       [-1, 1, 1, tf.shape(input_tensor)[3]])
-            # Zero out feature maps where appropriate; scale up to compensate
-            ret = input_tensor * binary_tensor
-        return ret
+            :return:
+            """
+            with tf.variable_scope(name):
+                # get the batch size and number of feature maps
+                num_feature_maps = [tf.shape(input_tensor)[0], tf.shape(input_tensor)[3]]
+
+                # get some uniform noise between keep_prob and 1 + keep_prob
+                random_tensor = keep_prob
+                random_tensor += tf.random_uniform(num_feature_maps,
+                                                   seed=seed,
+                                                   dtype=input_tensor.dtype)
+
+                # if we take the floor of this, we get a binary matrix where
+                # (1-keep_prob)% of the values are 0 and the rest are 1
+                binary_tensor = tf.floor(random_tensor)
+
+                # Reshape to multiply our feature maps by this tensor correctly
+                binary_tensor = tf.reshape(binary_tensor,
+                                           [-1, 1, 1, tf.shape(input_tensor)[3]])
+                # Zero out feature maps where appropriate; scale up to compensate
+                ret = input_tensor * binary_tensor
+                return ret
+
+        output = tf.cond(is_training, f1, f2)
+        return output
