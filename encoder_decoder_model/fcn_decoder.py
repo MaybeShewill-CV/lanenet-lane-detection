@@ -19,11 +19,21 @@ class FCNDecoder(cnn_basenet.CNNBaseModel):
     """
     实现一个全卷积解码类
     """
-    def __init__(self):
+    def __init__(self, phase):
         """
 
         """
         super(FCNDecoder, self).__init__()
+        self._train_phase = tf.constant('train', dtype=tf.string)
+        self._phase = phase
+        self._is_training = self._init_phase()
+
+    def _init_phase(self):
+        """
+
+        :return:
+        """
+        return tf.equal(self._phase, self._train_phase)
 
     def decode(self, input_tensor_dict, decode_layer_list, name):
         """
@@ -52,11 +62,18 @@ class FCNDecoder(cnn_basenet.CNNBaseModel):
                 fused = tf.add(deconv, score, name='fuse_{:d}'.format(i + 1))
                 score = fused
 
+                if self._is_training:
+                    score = self.spatial_dropout(input_tensor=score, keep_prob=0.5,
+                                                 name='fuse_{:d}_spatial_dropout'.format(i + 1))
+
             deconv_final = self.deconv2d(inputdata=score, out_channel=64, kernel_size=16,
                                          stride=8, use_bias=False, name='deconv_final')
 
             score_final = self.conv2d(inputdata=deconv_final, out_channel=2,
                                       kernel_size=1, use_bias=False, name='score_final')
+            if self._is_training:
+                score_final = self.spatial_dropout(input_tensor=score_final, keep_prob=0.5,
+                                                   name='finale_spatial_dropout')
 
             ret['logits'] = score_final
             ret['deconv'] = deconv_final
@@ -107,7 +124,7 @@ if __name__ == '__main__':
     vgg_encoder = vgg_encoder.VGG16Encoder(phase=tf.constant('train', tf.string))
     dense_encoder = dense_encoder.DenseEncoder(l=40, growthrate=12,
                                                with_bc=True, phase='train', n=5)
-    decoder = FCNDecoder()
+    decoder = FCNDecoder(phase='train')
 
     in_tensor = tf.placeholder(dtype=tf.float32, shape=[None, 256, 512, 3],
                                name='input')
