@@ -459,7 +459,8 @@ class CNNBaseModel(object):
 
             :return:
             """
-            return input_tensor
+            with tf.variable_scope(name):
+                return input_tensor
 
         def f2():
             """
@@ -481,5 +482,5 @@ class CNNBaseModel(object):
                 ret = input_tensor * binary_tensor
                 return ret
 
-        output = tf.cond(is_training, f1, f2)
+        output = tf.cond(is_training, f2, f1)
         return output
