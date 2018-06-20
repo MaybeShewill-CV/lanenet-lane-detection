@@ -454,6 +454,8 @@ class CNNBaseModel(object):
         :param seed:
         :return:
         """
+        tf.set_random_seed(seed=seed)
+
         def f1():
             """
 
