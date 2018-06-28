@@ -114,7 +114,7 @@ The accuracy during training process rises as follows:
 Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you find it helps you.
 
 ## TODO
-- [ ] Add a embedding visualization tools to visualize the embedding feature map
+- [] Add a embedding visualization tools to visualize the embedding feature map
 - [ ] Add detailed explanation of training the components of lanenet separately.
 - [ ] Training the model on different dataset
 - [ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model
