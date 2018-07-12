@@ -167,7 +167,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
             saver.restore(sess=sess, save_path=weights_path)
 
         # 加载预训练参数
-        if net_flag == 'vgg':
+        if net_flag == 'vgg' and weights_path is None:
             pretrained_weights = np.load(
                 './data/vgg16.npy',
                 encoding='latin1').item()
