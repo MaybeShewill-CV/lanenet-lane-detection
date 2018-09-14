@@ -74,7 +74,7 @@ Firstly you need to organize your training data refer to the data/training_data_
 to generate a train.txt and a val.txt to record the data used for training the model. 
 
 The training samples are consist of three components. A binary segmentation label file and a instance segmentation label
-file and the original image. The binary segmentation use 255 to represent the lane field and o for the rest. The 
+file and the original image. The binary segmentation use 255 to represent the lane field and 0 for the rest. The 
 instance use different pixel value to represent different lane field and 0 for the rest.
 
 All your training image will be scaled into the same scale according to the config file.
