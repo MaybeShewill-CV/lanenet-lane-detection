@@ -180,7 +180,6 @@ class VGG16Encoder(cnn_basenet.CNNBaseModel):
             #                      use_bias=False, flags=flags)
 
         return ret
-    # TODO(luoyao) luoyao@baidu.com 检查batch normalization分布和迁移是否合理
 
 if __name__ == '__main__':
     a = tf.placeholder(dtype=tf.float32, shape=[1, 2048, 2048, 3], name='input')
