@@ -58,11 +58,7 @@ class VGG16Encoder(cnn_basenet.CNNBaseModel):
 
             relu = self.relu(inputdata=bn, name='relu')
 
-            spatial_dropout = self.spatial_dropout(input_tensor=relu, keep_prob=0.5,
-                                                   is_training=self._is_training,
-                                                   name='spatial_dropout')
-
-            return spatial_dropout
+            return relu
 
     def _fc_stage(self, input_tensor, out_dims, name, use_bias=False):
         """
@@ -184,6 +180,7 @@ class VGG16Encoder(cnn_basenet.CNNBaseModel):
             #                      use_bias=False, flags=flags)
 
         return ret
+
 
 if __name__ == '__main__':
     a = tf.placeholder(dtype=tf.float32, shape=[1, 2048, 2048, 3], name='input')
