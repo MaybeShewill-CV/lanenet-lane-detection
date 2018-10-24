@@ -33,9 +33,9 @@ class LaneNet(cnn_basenet.CNNBaseModel):
         elif self._net_flag == 'dense':
             self._encoder = dense_encoder.DenseEncoder(l=20, growthrate=8,
                                                        with_bc=True,
-                                                       phase=self._phase,
+                                                       phase=phase,
                                                        n=5)
-        self._decoder = fcn_decoder.FCNDecoder()
+        self._decoder = fcn_decoder.FCNDecoder(phase=phase)
         return
 
     def __str__(self):
@@ -88,37 +88,43 @@ class LaneNet(cnn_basenet.CNNBaseModel):
             inference_ret = self._build_model(input_tensor=input_tensor, name='inference')
             # 计算二值分割损失函数
             decode_logits = inference_ret['logits']
-            decode_logits_reshape = tf.reshape(
-                decode_logits,
-                shape=[decode_logits.get_shape().as_list()[0],
-                       decode_logits.get_shape().as_list()[1] * decode_logits.get_shape().as_list()[2],
-                       decode_logits.get_shape().as_list()[3]])
-            binary_label = tf.squeeze(binary_label, squeeze_dims=[3])
-            binary_label_reshape = tf.reshape(
+            binary_label_plain = tf.reshape(
                 binary_label,
-                shape=[binary_label.get_shape().as_list()[0],
-                       binary_label.get_shape().as_list()[1] * binary_label.get_shape().as_list()[2]])
-            binary_label_reshape = tf.one_hot(binary_label_reshape, depth=2)
-            # binary_segmenatation_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            #     logits=decode_logits, labels=tf.squeeze(binary_label, squeeze_dims=[3]),
-            #     name='entropy_loss')
-            binary_segmenatation_loss = tf.nn.softmax_cross_entropy_with_logits(
-                labels=binary_label_reshape, logits=decode_logits_reshape, name='entropy_loss')
+                shape=[binary_label.get_shape().as_list()[0] *
+                       binary_label.get_shape().as_list()[1] *
+                       binary_label.get_shape().as_list()[2]])
+            # 加入class weights
+            unique_labels, unique_id, counts = tf.unique_with_counts(binary_label_plain)
+            counts = tf.cast(counts, tf.float32)
+            inverse_weights = tf.divide(1.0,
+                                        tf.log(tf.add(tf.divide(tf.constant(1.0), counts),
+                                                      tf.constant(1.02))))
+            inverse_weights = tf.gather(inverse_weights, binary_label)
+            binary_segmenatation_loss = tf.losses.sparse_softmax_cross_entropy(
+                labels=binary_label, logits=decode_logits, weights=inverse_weights)
             binary_segmenatation_loss = tf.reduce_mean(binary_segmenatation_loss)
+
             # 计算discriminative loss损失函数
             decode_deconv = inference_ret['deconv']
             # 像素嵌入
-            pix_embedding = self.conv2d(inputdata=decode_deconv, out_channel=3, kernel_size=1,
+            pix_embedding = self.conv2d(inputdata=decode_deconv, out_channel=4, kernel_size=1,
                                         use_bias=False, name='pix_embedding_conv')
             pix_embedding = self.relu(inputdata=pix_embedding, name='pix_embedding_relu')
             # 计算discriminative loss
             image_shape = (pix_embedding.get_shape().as_list()[1], pix_embedding.get_shape().as_list()[2])
             disc_loss, l_var, l_dist, l_reg = \
                 lanenet_discriminative_loss.discriminative_loss(
-                    pix_embedding, instance_label, 3, image_shape, 0.5, 1.5, 1.0, 1.0, 0.001)
+                    pix_embedding, instance_label, 4, image_shape, 0.5, 3.0, 1.0, 1.0, 0.001)
 
             # 合并损失
-            total_loss = 0.7 * binary_segmenatation_loss + 0.3 * disc_loss
+            l2_reg_loss = tf.constant(0.0, tf.float32)
+            for vv in tf.trainable_variables():
+                if 'bn' in vv.name:
+                    continue
+                else:
+                    l2_reg_loss = tf.add(l2_reg_loss, tf.nn.l2_loss(vv))
+            l2_reg_loss *= 0.001
+            total_loss = 0.5 * binary_segmenatation_loss + 0.5 * disc_loss + l2_reg_loss
 
             ret = {
                 'total_loss': total_loss,
@@ -147,7 +153,7 @@ class LaneNet(cnn_basenet.CNNBaseModel):
             # 计算像素嵌入
             decode_deconv = inference_ret['deconv']
             # 像素嵌入
-            pix_embedding = self.conv2d(inputdata=decode_deconv, out_channel=3, kernel_size=1,
+            pix_embedding = self.conv2d(inputdata=decode_deconv, out_channel=4, kernel_size=1,
                                         use_bias=False, name='pix_embedding_conv')
             pix_embedding = self.relu(inputdata=pix_embedding, name='pix_embedding_relu')
 
@@ -161,4 +167,7 @@ if __name__ == '__main__':
     instance_label = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 1], name='label')
     ret = model.compute_loss(input_tensor=input_tensor, binary_label=binary_label,
                              instance_label=instance_label, name='loss')
-    print(ret['total_loss'])
+    for vv in tf.trainable_variables():
+        if 'bn' in vv.name:
+            continue
+        print(vv.name)
