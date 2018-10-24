@@ -27,8 +27,8 @@ def discriminative_loss_single(
     :param correct_label: instance label
     :param feature_dim: feature dimension of prediction
     :param label_shape: shape of label
-    :param delta_v: cutoff variance distance
-    :param delta_d: curoff cluster distance
+    :param delta_v: cut off variance distance
+    :param delta_d: cut off cluster distance
     :param param_var: weight for intra cluster variance
     :param param_dist: weight for inter cluster distances
     :param param_reg: weight regularization
