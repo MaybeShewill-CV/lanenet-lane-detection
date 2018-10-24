@@ -90,7 +90,7 @@ class LaneNetHNet(cnn_basenet.CNNBaseModel):
                                                transformation_coeffcient=transformation_coefficient,
                                                name='hnet_loss')
 
-            return loss
+            return loss, transformation_coefficient
 
     def inference(self, input_tensor, name):
         """
@@ -104,11 +104,14 @@ class LaneNetHNet(cnn_basenet.CNNBaseModel):
 
 
 if __name__ == '__main__':
-    tensor_in = tf.placeholder(dtype=tf.float32, shape=[1, 64, 128, 3])
+    tensor_in = tf.placeholder(dtype=tf.float32, shape=[2, 64, 128, 3])
     gt_label_pts = tf.placeholder(dtype=tf.float32, shape=[None, 3])
 
     net = LaneNetHNet(phase=tf.constant('train', tf.string))
-    c_loss = net.compute_loss(tensor_in, gt_label_pts=gt_label_pts, name='hnet')
+    coffe = net.inference(tensor_in, name='hnet')
+    # c_loss = net.compute_loss(tensor_in, gt_label_pts=gt_label_pts, name='hnet')
+
+    saver = tf.train.Saver()
 
     from data_provider import lanenet_hnet_data_processor
     import numpy as np
@@ -118,13 +121,30 @@ if __name__ == '__main__':
     except ImportError:
         pass
     train_dataset = lanenet_hnet_data_processor.DataSet(
-        ['/home/baidu/DataBase/Semantic_Segmentation/TUSimple_Lane_Detection/training/label_data_0531.json'])
+        ['/media/baidu/Data/Semantic_Segmentation/TUSimple_Lane_Detection/training/label_data_0531.json'])
 
     with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+        # sess.run(tf.global_variables_initializer())
+
+        saver.restore(sess=sess,
+                      save_path='../model/tusimple_lanenet_hnet/tusimple_lanenet_hnet_2018-08-08-19-32-01.ckpt-200000')
 
         image, label_pts = train_dataset.next_batch(1)
+        label_pts = label_pts[0]
         image = [cv2.resize(tmp, (128, 64), interpolation=cv2.INTER_LINEAR) for tmp in image]
-        label_pts = np.concatenate((label_pts[0], np.ones(shape=[len(label_pts[0]), 1], dtype=np.float32)), axis=1)
-        loss_val = sess.run(c_loss, feed_dict={tensor_in: image, gt_label_pts: label_pts})
-        print(loss_val)
+        c_val = sess.run(coffe, feed_dict={tensor_in: image, gt_label_pts: label_pts})
+        R = np.zeros([3, 3], np.float32)
+        R[0, 0] = c_val[0]
+        R[0, 1] = c_val[1]
+        R[0, 2] = c_val[2]
+        R[1, 1] = c_val[3]
+        R[1, 2] = c_val[4]
+        R[2, 1] = c_val[5]
+        R[2, 2] = 1
+        print(np.mat(R).I)
+        print(R)
+        print(c_val)
+
+        warp_image = cv2.warpPerspective(image[0], R, dsize=(image[0].shape[1], image[0].shape[0]))
+        cv2.imwrite("src.jpg", image[0])
+        cv2.imwrite("ret.jpg", warp_image)
