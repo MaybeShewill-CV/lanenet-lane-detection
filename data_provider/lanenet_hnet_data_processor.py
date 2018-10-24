@@ -62,24 +62,22 @@ class DataSet(object):
                     h_samples = info_dict['h_samples']
                     lanes = info_dict['lanes']
 
-                    gt_pts = []
+                    lane_pts = []
                     for lane in lanes:
                         assert len(h_samples) == len(lane)
-                        lane_pts = []
                         for index in range(len(lane)):
                             if lane[index] == -2:
                                 continue
                             else:
                                 ptx = lane[index]
                                 pty = h_samples[index]
-                                lane_pts.append([ptx, pty])
+                                ptz = 1
+                                lane_pts.append([ptx, pty, ptz])
                         if not lane_pts:
                             continue
                         if len(lane_pts) <= 3:
                             continue
-                        gt_pts.append(lane_pts)
-
-                    label_gt_pts.append(gt_pts)
+                    label_gt_pts.append(lane_pts)
 
         return np.array(label_image_path), np.array(label_gt_pts)
 
@@ -124,11 +122,11 @@ class DataSet(object):
 
 if __name__ == '__main__':
     import glob
-    json_file_list = glob.glob('{:s}/*.json'.format('/home/baidu/DataBase/Semantic_Segmentation/'
-                                                    'TUSimple_Lane_Detection/training'))
+    json_file_list = glob.glob('{:s}/*.json'.format('/media/baidu/Data/Semantic_Segmentation'
+                                                    '/TUSimple_Lane_Detection/training'))
     json_file_list = [tmp for tmp in json_file_list if 'test' not in tmp]
     val = DataSet(json_file_list)
-    a1, a2 = val.next_batch(1)
+    a1, a2 = val.next_batch(2)
     print(a1)
     print(a2)
     src_image = cv2.imread(a1[0], cv2.IMREAD_COLOR)
