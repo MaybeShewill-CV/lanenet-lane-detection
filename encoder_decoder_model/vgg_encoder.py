@@ -181,7 +181,6 @@ class VGG16Encoder(cnn_basenet.CNNBaseModel):
 
         return ret
 
-
 if __name__ == '__main__':
     a = tf.placeholder(dtype=tf.float32, shape=[1, 2048, 2048, 3], name='input')
     encoder = VGG16Encoder(phase=tf.constant('train', dtype=tf.string))
