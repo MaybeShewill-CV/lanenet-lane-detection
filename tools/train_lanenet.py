@@ -18,6 +18,7 @@ import cv2
 import glog as log
 import numpy as np
 import tensorflow as tf
+from sklearn.decomposition import PCA
 
 try:
     from cv2 import cv2
@@ -62,63 +63,64 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
     train_dataset = lanenet_data_processor.DataSet(train_dataset_file)
     val_dataset = lanenet_data_processor.DataSet(val_dataset_file)
 
-    input_tensor = tf.placeholder(dtype=tf.float32,
-                                  shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
-                                         CFG.TRAIN.IMG_WIDTH, 3],
-                                  name='input_tensor')
-    binary_label_tensor = tf.placeholder(dtype=tf.int64,
-                                         shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
-                                                CFG.TRAIN.IMG_WIDTH, 1],
-                                         name='binary_input_label')
-    instance_label_tensor = tf.placeholder(dtype=tf.float32,
-                                           shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
-                                                  CFG.TRAIN.IMG_WIDTH],
-                                           name='instance_input_label')
-    phase = tf.placeholder(dtype=tf.string, shape=None, name='net_phase')
+    with tf.device('/gpu:1'):
+        input_tensor = tf.placeholder(dtype=tf.float32,
+                                      shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
+                                             CFG.TRAIN.IMG_WIDTH, 3],
+                                      name='input_tensor')
+        binary_label_tensor = tf.placeholder(dtype=tf.int64,
+                                             shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
+                                                    CFG.TRAIN.IMG_WIDTH, 1],
+                                             name='binary_input_label')
+        instance_label_tensor = tf.placeholder(dtype=tf.float32,
+                                               shape=[CFG.TRAIN.BATCH_SIZE, CFG.TRAIN.IMG_HEIGHT,
+                                                      CFG.TRAIN.IMG_WIDTH],
+                                               name='instance_input_label')
+        phase = tf.placeholder(dtype=tf.string, shape=None, name='net_phase')
 
-    net = lanenet_merge_model.LaneNet(net_flag=net_flag, phase=phase)
+        net = lanenet_merge_model.LaneNet(net_flag=net_flag, phase=phase)
 
-    # calculate the loss
-    compute_ret = net.compute_loss(input_tensor=input_tensor, binary_label=binary_label_tensor,
-                                   instance_label=instance_label_tensor, name='lanenet_loss')
-    total_loss = compute_ret['total_loss']
-    binary_seg_loss = compute_ret['binary_seg_loss']
-    disc_loss = compute_ret['discriminative_loss']
-    pix_embedding = compute_ret['instance_seg_logits']
+        # calculate the loss
+        compute_ret = net.compute_loss(input_tensor=input_tensor, binary_label=binary_label_tensor,
+                                       instance_label=instance_label_tensor, name='lanenet_model')
+        total_loss = compute_ret['total_loss']
+        binary_seg_loss = compute_ret['binary_seg_loss']
+        disc_loss = compute_ret['discriminative_loss']
+        pix_embedding = compute_ret['instance_seg_logits']
 
-    # calculate the accuracy
-    out_logits = compute_ret['binary_seg_logits']
-    out_logits = tf.nn.softmax(logits=out_logits)
-    out_logits_out = tf.argmax(out_logits, axis=-1)
-    out = tf.argmax(out_logits, axis=-1)
-    out = tf.expand_dims(out, axis=-1)
+        # calculate the accuracy
+        out_logits = compute_ret['binary_seg_logits']
+        out_logits = tf.nn.softmax(logits=out_logits)
+        out_logits_out = tf.argmax(out_logits, axis=-1)
+        out = tf.argmax(out_logits, axis=-1)
+        out = tf.expand_dims(out, axis=-1)
 
-    idx = tf.where(tf.equal(binary_label_tensor, 1))
-    pix_cls_ret = tf.gather_nd(out, idx)
-    accuracy = tf.count_nonzero(pix_cls_ret)
-    accuracy = tf.divide(accuracy, tf.cast(tf.shape(pix_cls_ret)[0], tf.int64))
+        idx = tf.where(tf.equal(binary_label_tensor, 1))
+        pix_cls_ret = tf.gather_nd(out, idx)
+        accuracy = tf.count_nonzero(pix_cls_ret)
+        accuracy = tf.divide(accuracy, tf.cast(tf.shape(pix_cls_ret)[0], tf.int64))
 
-    global_step = tf.Variable(0, trainable=False)
-    learning_rate = tf.train.exponential_decay(CFG.TRAIN.LEARNING_RATE, global_step,
-                                               5000, 0.96, staircase=True)
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-        optimizer = tf.train.AdamOptimizer(learning_rate=
-                                           learning_rate).minimize(loss=total_loss,
-                                                                   var_list=tf.trainable_variables(),
-                                                                   global_step=global_step)
+        global_step = tf.Variable(0, trainable=False)
+        learning_rate = tf.train.exponential_decay(CFG.TRAIN.LEARNING_RATE, global_step,
+                                                   100000, 0.1, staircase=True)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            optimizer = tf.train.MomentumOptimizer(
+                learning_rate=learning_rate, momentum=0.9).minimize(loss=total_loss,
+                                                                    var_list=tf.trainable_variables(),
+                                                                    global_step=global_step)
 
     # Set tf saver
     saver = tf.train.Saver()
-    model_save_dir = 'model/culane_lanenet'
+    model_save_dir = 'model/cu_lanenet'
     if not ops.exists(model_save_dir):
         os.makedirs(model_save_dir)
     train_start_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-    model_name = 'culane_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
+    model_name = 'cu_lanenet{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
     model_save_path = ops.join(model_save_dir, model_name)
 
     # Set tf summary
-    tboard_save_path = 'tboard/culane_lanenet/{:s}'.format(net_flag)
+    tboard_save_path = 'tboard/cu_lanenet/{:s}'.format(net_flag)
     if not ops.exists(tboard_save_path):
         os.makedirs(tboard_save_path)
     train_cost_scalar = tf.summary.scalar(name='train_cost', tensor=total_loss)
@@ -137,7 +139,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                                              val_binary_seg_loss_scalar, val_instance_seg_loss_scalar])
 
     # Set sess configuration
-    sess_config = tf.ConfigProto(device_count={'GPU': 1})
+    sess_config = tf.ConfigProto(allow_soft_placement=True)
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.TRAIN.GPU_MEMORY_FRACTION
     sess_config.gpu_options.allow_growth = CFG.TRAIN.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
@@ -181,31 +183,35 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                 except Exception as e:
                     continue
 
+        pca = PCA(n_components=3)
+
         train_cost_time_mean = []
         val_cost_time_mean = []
         for epoch in range(train_epochs):
             # training part
             t_start = time.time()
 
-            gt_imgs, binary_gt_labels, instance_gt_labels = train_dataset.next_batch(CFG.TRAIN.BATCH_SIZE)
-            gt_imgs = [cv2.resize(tmp,
-                                  dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
-                                  dst=tmp,
-                                  interpolation=cv2.INTER_LINEAR)
-                       for tmp in gt_imgs]
-            gt_imgs = [tmp - VGG_MEAN for tmp in gt_imgs]
-            binary_gt_labels = [cv2.resize(tmp,
-                                           dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
-                                           dst=tmp,
-                                           interpolation=cv2.INTER_NEAREST)
-                                for tmp in binary_gt_labels]
-            binary_gt_labels = [np.expand_dims(tmp, axis=-1) for tmp in binary_gt_labels]
-            instance_gt_labels = [cv2.resize(tmp,
-                                             dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
-                                             dst=tmp,
-                                             interpolation=cv2.INTER_NEAREST)
-                                  for tmp in instance_gt_labels]
-            phase_train = 'train'
+            with tf.device('/cpu:1'):
+                gt_imgs, binary_gt_labels, instance_gt_labels = train_dataset.next_batch(CFG.TRAIN.BATCH_SIZE)
+                gt_imgs = [cv2.resize(tmp,
+                                      dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
+                                      dst=tmp,
+                                      interpolation=cv2.INTER_LINEAR)
+                           for tmp in gt_imgs]
+
+                gt_imgs = [tmp - VGG_MEAN for tmp in gt_imgs]
+                binary_gt_labels = [cv2.resize(tmp,
+                                               dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
+                                               dst=tmp,
+                                               interpolation=cv2.INTER_NEAREST)
+                                    for tmp in binary_gt_labels]
+                binary_gt_labels = [np.expand_dims(tmp, axis=-1) for tmp in binary_gt_labels]
+                instance_gt_labels = [cv2.resize(tmp,
+                                                 dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
+                                                 dst=tmp,
+                                                 interpolation=cv2.INTER_NEAREST)
+                                      for tmp in instance_gt_labels]
+                phase_train = 'train'
 
             _, c, train_accuracy, train_summary, binary_loss, instance_loss, embedding, binary_seg_img = \
                 sess.run([optimizer, total_loss,
@@ -227,39 +233,42 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                 cv2.imwrite('nan_image.png', gt_imgs[0] + VGG_MEAN)
                 cv2.imwrite('nan_instance_label.png', instance_gt_labels[0])
                 cv2.imwrite('nan_binary_label.png', binary_gt_labels[0] * 255)
-                cv2.imwrite('nan_embedding.png', embedding[0])
+                # cv2.imwrite('nan_embedding.png', pca.fit_transform(embedding[0]))
                 return
             if epoch % 100 == 0:
                 cv2.imwrite('image.png', gt_imgs[0] + VGG_MEAN)
                 cv2.imwrite('binary_label.png', binary_gt_labels[0] * 255)
                 cv2.imwrite('instance_label.png', instance_gt_labels[0])
                 cv2.imwrite('binary_seg_img.png', binary_seg_img[0] * 255)
-                cv2.imwrite('embedding.png', embedding[0])
+
+                embedding_pca = pca.fit_transform(embedding[0].reshape((256 * 512, 4)))
+                cv2.imwrite('embedding.png', np.array(embedding_pca.reshape((256, 512, 3)), np.uint8))
 
             cost_time = time.time() - t_start
             train_cost_time_mean.append(cost_time)
             summary_writer.add_summary(summary=train_summary, global_step=epoch)
 
             # validation part
-            gt_imgs_val, binary_gt_labels_val, instance_gt_labels_val \
-                = val_dataset.next_batch(CFG.TRAIN.VAL_BATCH_SIZE)
-            gt_imgs_val = [cv2.resize(tmp,
-                                      dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
-                                      dst=tmp,
-                                      interpolation=cv2.INTER_LINEAR)
-                           for tmp in gt_imgs_val]
-            gt_imgs_val = [tmp - VGG_MEAN for tmp in gt_imgs_val]
-            binary_gt_labels_val = [cv2.resize(tmp,
-                                               dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
-                                               dst=tmp)
-                                    for tmp in binary_gt_labels_val]
-            binary_gt_labels_val = [np.expand_dims(tmp, axis=-1) for tmp in binary_gt_labels_val]
-            instance_gt_labels_val = [cv2.resize(tmp,
-                                                 dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
-                                                 dst=tmp,
-                                                 interpolation=cv2.INTER_NEAREST)
-                                      for tmp in instance_gt_labels_val]
-            phase_val = 'test'
+            with tf.device('/cpu:1'):
+                gt_imgs_val, binary_gt_labels_val, instance_gt_labels_val \
+                    = val_dataset.next_batch(CFG.TRAIN.VAL_BATCH_SIZE)
+                gt_imgs_val = [cv2.resize(tmp,
+                                          dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
+                                          dst=tmp,
+                                          interpolation=cv2.INTER_LINEAR)
+                               for tmp in gt_imgs_val]
+                gt_imgs_val = [tmp - VGG_MEAN for tmp in gt_imgs_val]
+                binary_gt_labels_val = [cv2.resize(tmp,
+                                                   dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
+                                                   dst=tmp)
+                                        for tmp in binary_gt_labels_val]
+                binary_gt_labels_val = [np.expand_dims(tmp, axis=-1) for tmp in binary_gt_labels_val]
+                instance_gt_labels_val = [cv2.resize(tmp,
+                                                     dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
+                                                     dst=tmp,
+                                                     interpolation=cv2.INTER_NEAREST)
+                                          for tmp in instance_gt_labels_val]
+                phase_val = 'test'
 
             t_start_val = time.time()
             c_val, val_summary, val_accuracy, val_binary_seg_loss, val_instance_seg_loss = \
