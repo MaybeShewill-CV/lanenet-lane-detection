@@ -186,6 +186,7 @@ class LaneNetCluster(object):
 
         return mask_image
 
+
 if __name__ == '__main__':
     binary_seg_image = cv2.imread('binary_ret.png', cv2.IMREAD_GRAYSCALE)
     binary_seg_image[np.where(binary_seg_image == 255)] = 1
