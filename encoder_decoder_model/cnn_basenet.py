@@ -9,7 +9,6 @@
 The base convolution neural networks mainly implement some useful cnn functions
 """
 import tensorflow as tf
-import tensorflow.contrib.layers as tf_layer
 import numpy as np
 
 
@@ -313,31 +312,31 @@ class CNNBaseModel(object):
         :param name:
         :return:
         """
-        def f1():
-            """
+        # def f1():
+        #     """
+        #
+        #     :return:
+        #     """
+        #     # print('batch_normalization: train phase')
+        #     return tf_layer.batch_norm(
+        #                      inputdata, is_training=True,
+        #                      center=True, updates_collections=None,
+        #                      scope=name, reuse=False)
+        #
+        # def f2():
+        #     """
+        #
+        #     :return:
+        #     """
+        #     # print('batch_normalization: test phase')
+        #     return tf_layer.batch_norm(
+        #                      inputdata, is_training=False,
+        #                      center=True, updates_collections=None,
+        #                      scope=name, reuse=True)
+        #
+        # output = tf.cond(is_training, f1, f2)
 
-            :return:
-            """
-            # print('batch_normalization: train phase')
-            return tf_layer.batch_norm(
-                             inputdata, is_training=True,
-                             center=True, updates_collections=None,
-                             scope=name, reuse=False)
-
-        def f2():
-            """
-
-            :return:
-            """
-            # print('batch_normalization: test phase')
-            return tf_layer.batch_norm(
-                             inputdata, is_training=False,
-                             center=True, updates_collections=None,
-                             scope=name, reuse=True)
-
-        output = tf.cond(is_training, f1, f2)
-
-        return output
+        return tf.layers.batch_normalization(inputs=inputdata, training=is_training, name=name)
 
     @staticmethod
     def squeeze(inputdata, axis=None, name=None):
@@ -486,3 +485,15 @@ class CNNBaseModel(object):
 
         output = tf.cond(is_training, f2, f1)
         return output
+
+    @staticmethod
+    def lrelu(inputdata, name, alpha=0.2):
+        """
+
+        :param inputdata:
+        :param alpha:
+        :param name:
+        :return:
+        """
+        with tf.variable_scope(name):
+            return tf.nn.relu(inputdata) - alpha * tf.nn.relu(-inputdata)
