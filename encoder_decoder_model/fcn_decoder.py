@@ -62,59 +62,14 @@ class FCNDecoder(cnn_basenet.CNNBaseModel):
                 fused = tf.add(deconv, score, name='fuse_{:d}'.format(i + 1))
                 score = fused
 
-                score = self.spatial_dropout(input_tensor=score, keep_prob=0.5,
-                                             is_training=self._is_training,
-                                             name='fuse_{:d}_sp_dropout'.format(i + 1))
-
             deconv_final = self.deconv2d(inputdata=score, out_channel=64, kernel_size=16,
                                          stride=8, use_bias=False, name='deconv_final')
 
             score_final = self.conv2d(inputdata=deconv_final, out_channel=2,
                                       kernel_size=1, use_bias=False, name='score_final')
-            score_final = self.spatial_dropout(input_tensor=score_final, keep_prob=0.5,
-                                               is_training=self._is_training,
-                                               name='finale_spatial_dropout')
 
             ret['logits'] = score_final
             ret['deconv'] = deconv_final
-
-        #     # score stage 1
-        #     input_tensor = input_tensor_dict['pool5']
-        #
-        #     score_1 = self.conv2d(inputdata=input_tensor, out_channel=2,
-        #                           kernel_size=1, use_bias=False, name='score_1')
-        #
-        #     # decode stage 1
-        #     deconv_1 = self.deconv2d(inputdata=score_1, out_channel=2, kernel_size=4,
-        #                              stride=2, use_bias=False, name='deconv_1')
-        #
-        #     # score stage 2
-        #     score_2 = self.conv2d(inputdata=input_tensor_dict['pool4'], out_channel=2,
-        #                           kernel_size=1, use_bias=False, name='score_2')
-        #
-        #     # fuse stage 1
-        #     fuse_1 = tf.add(deconv_1, score_2, name='fuse_1')
-        #
-        #     # decode stage 2
-        #     deconv_2 = self.deconv2d(inputdata=fuse_1, out_channel=2, kernel_size=4,
-        #                              stride=2, use_bias=False, name='deconv_2')
-        #
-        #     # score stage 3
-        #     score_3 = self.conv2d(inputdata=input_tensor_dict['pool3'], out_channel=2,
-        #                           kernel_size=1, use_bias=False, name='score_3')
-        #
-        #     # fuse stage 2
-        #     fuse_2 = tf.add(deconv_2, score_3, name='fuse_2')
-        #
-        #     # decode stage 3
-        #     deconv_3 = self.deconv2d(inputdata=fuse_2, out_channel=2, kernel_size=16,
-        #                              stride=8, use_bias=False, name='deconv_3')
-        #
-        #     # score stage 4
-        #     score_4 = self.conv2d(inputdata=deconv_3, out_channel=2,
-        #                           kernel_size=1, use_bias=False, name='score_4')
-        #
-        # ret['logits'] = score_4
 
         return ret
 
