@@ -312,29 +312,6 @@ class CNNBaseModel(object):
         :param name:
         :return:
         """
-        # def f1():
-        #     """
-        #
-        #     :return:
-        #     """
-        #     # print('batch_normalization: train phase')
-        #     return tf_layer.batch_norm(
-        #                      inputdata, is_training=True,
-        #                      center=True, updates_collections=None,
-        #                      scope=name, reuse=False)
-        #
-        # def f2():
-        #     """
-        #
-        #     :return:
-        #     """
-        #     # print('batch_normalization: test phase')
-        #     return tf_layer.batch_norm(
-        #                      inputdata, is_training=False,
-        #                      center=True, updates_collections=None,
-        #                      scope=name, reuse=True)
-        #
-        # output = tf.cond(is_training, f1, f2)
 
         return tf.layers.batch_normalization(inputs=inputdata, training=is_training, name=name)
 
