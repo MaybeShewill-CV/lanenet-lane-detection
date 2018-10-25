@@ -18,12 +18,6 @@ import cv2
 import glog as log
 import numpy as np
 import tensorflow as tf
-from sklearn.decomposition import PCA
-
-try:
-    from cv2 import cv2
-except ImportError:
-    pass
 
 from config import global_config
 from lanenet_model import lanenet_merge_model
@@ -45,6 +39,20 @@ def init_args():
     parser.add_argument('--weights_path', type=str, help='The pretrained weights path')
 
     return parser.parse_args()
+
+
+def minmax_scale(input_arr):
+    """
+
+    :param input_arr:
+    :return:
+    """
+    min_val = np.min(input_arr)
+    max_val = np.max(input_arr)
+
+    output_arr = (input_arr - min_val) * 255.0 / (max_val - min_val)
+
+    return output_arr
 
 
 def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
@@ -112,15 +120,15 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
 
     # Set tf saver
     saver = tf.train.Saver()
-    model_save_dir = 'model/cu_lanenet'
+    model_save_dir = 'model/tusimple_lanenet'
     if not ops.exists(model_save_dir):
         os.makedirs(model_save_dir)
     train_start_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-    model_name = 'cu_lanenet{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
+    model_name = 'tusimple_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
     model_save_path = ops.join(model_save_dir, model_name)
 
     # Set tf summary
-    tboard_save_path = 'tboard/cu_lanenet/{:s}'.format(net_flag)
+    tboard_save_path = 'tboard/tusimple_lanenet/{:s}'.format(net_flag)
     if not ops.exists(tboard_save_path):
         os.makedirs(tboard_save_path)
     train_cost_scalar = tf.summary.scalar(name='train_cost', tensor=total_loss)
@@ -183,15 +191,13 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                 except Exception as e:
                     continue
 
-        pca = PCA(n_components=3)
-
         train_cost_time_mean = []
         val_cost_time_mean = []
         for epoch in range(train_epochs):
             # training part
             t_start = time.time()
 
-            with tf.device('/cpu:1'):
+            with tf.device('/cpu:0'):
                 gt_imgs, binary_gt_labels, instance_gt_labels = train_dataset.next_batch(CFG.TRAIN.BATCH_SIZE)
                 gt_imgs = [cv2.resize(tmp,
                                       dsize=(CFG.TRAIN.IMG_WIDTH, CFG.TRAIN.IMG_HEIGHT),
@@ -211,7 +217,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                                                  dst=tmp,
                                                  interpolation=cv2.INTER_NEAREST)
                                       for tmp in instance_gt_labels]
-                phase_train = 'train'
+            phase_train = 'train'
 
             _, c, train_accuracy, train_summary, binary_loss, instance_loss, embedding, binary_seg_img = \
                 sess.run([optimizer, total_loss,
@@ -233,23 +239,25 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                 cv2.imwrite('nan_image.png', gt_imgs[0] + VGG_MEAN)
                 cv2.imwrite('nan_instance_label.png', instance_gt_labels[0])
                 cv2.imwrite('nan_binary_label.png', binary_gt_labels[0] * 255)
-                # cv2.imwrite('nan_embedding.png', pca.fit_transform(embedding[0]))
                 return
+
             if epoch % 100 == 0:
                 cv2.imwrite('image.png', gt_imgs[0] + VGG_MEAN)
                 cv2.imwrite('binary_label.png', binary_gt_labels[0] * 255)
                 cv2.imwrite('instance_label.png', instance_gt_labels[0])
                 cv2.imwrite('binary_seg_img.png', binary_seg_img[0] * 255)
 
-                embedding_pca = pca.fit_transform(embedding[0].reshape((256 * 512, 4)))
-                cv2.imwrite('embedding.png', np.array(embedding_pca.reshape((256, 512, 3)), np.uint8))
+                for i in range(4):
+                    embedding[0][:, :, i] = minmax_scale(embedding[0][:, :, i])
+                embedding_image = np.array(embedding[0], np.uint8)
+                cv2.imwrite('embedding.png', embedding_image)
 
             cost_time = time.time() - t_start
             train_cost_time_mean.append(cost_time)
             summary_writer.add_summary(summary=train_summary, global_step=epoch)
 
             # validation part
-            with tf.device('/cpu:1'):
+            with tf.device('/cpu:0'):
                 gt_imgs_val, binary_gt_labels_val, instance_gt_labels_val \
                     = val_dataset.next_batch(CFG.TRAIN.VAL_BATCH_SIZE)
                 gt_imgs_val = [cv2.resize(tmp,
@@ -268,7 +276,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                                                      dst=tmp,
                                                      interpolation=cv2.INTER_NEAREST)
                                           for tmp in instance_gt_labels_val]
-                phase_val = 'test'
+            phase_val = 'test'
 
             t_start_val = time.time()
             c_val, val_summary, val_accuracy, val_binary_seg_loss, val_instance_seg_loss = \
