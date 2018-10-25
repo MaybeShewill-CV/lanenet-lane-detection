@@ -97,7 +97,7 @@ def test_lanenet(image_path, weights_path, use_gpu):
     if use_gpu:
         sess_config = tf.ConfigProto(device_count={'GPU': 1})
     else:
-        sess_config = tf.ConfigProto(device_count={'GPU': 0})
+        sess_config = tf.ConfigProto(device_count={'CPU': 0})
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.TEST.GPU_MEMORY_FRACTION
     sess_config.gpu_options.allow_growth = CFG.TRAIN.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
@@ -228,7 +228,7 @@ def test_lanenet_batch(image_dir, weights_path, batch_size, use_gpu, save_dir=No
                     image_name = ops.split(image_path_epoch[index])[1]
                     image_save_path = ops.join(save_dir, image_name)
                     cv2.imwrite(image_save_path, mask_image)
-                    # log.info('[Epoch:{:d}] Detection image {:s} complete'.format(epoch, image_name))
+
             log.info('[Epoch:{:d}] 进行{:d}张图像车道线聚类, 共耗时: {:.5f}s, 平均每张耗时: {:.5f}'.format(
                 epoch, len(image_path_epoch), np.sum(cluster_time), np.mean(cluster_time)))
 
