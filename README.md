@@ -11,8 +11,8 @@ The main network architecture is as follows:
 
 ## Installation
 This software has only been tested on ubuntu 16.04(x64), python3.5, cuda-8.0, cudnn-6.0 with a GTX-1070 GPU. 
-To install this software you need tensorflow 1.3.0 and other version of tensorflow has not been tested but I think 
-it will be able to work properly in tensorflow above version 1.0. Other required package you may install them by
+To install this software you need tensorflow 1.10.0 and other version of tensorflow has not been tested but I think 
+it will be able to work properly in tensorflow above version 1.10. Other required package you may install them by
 
 ```
 pip3 install -r requirements.txt
@@ -24,14 +24,14 @@ The deep neural network inference part can achieve around a 50fps which is simil
 the input pipeline I implemented now need to be improved to achieve a real time lane detection system.
 
 The trained lanenet model weights files are stored in 
-[dropbox_lanenet_model_file](https://www.dropbox.com/sh/2ptlvq4u1qzs46n/AAAwKhXEHkxew8HJMGXWciyda?dl=0). You can 
+[new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0). You can 
 download the model and put them in folder model/tusimple_lanenet/
 
 You can test a single image on the trained model as follows
 
 ```
 python tools/test_lanenet.py --is_batch False --batch_size 1 
---weights_path model/tusimple_lanenet/tusimple_lanenet_vgg_2018-05-21-11-11-03.ckpt-94000 
+--weights_path path/to/your/model_weights_file 
 --image_path data/tusimple_test_image/0.jpg
 ```
 The results are as follows:
@@ -59,7 +59,7 @@ The results are as follows:
 If you want to test the model on a whole dataset you may call
 ```
 python tools/test_lanenet.py --is_batch True --batch_size 2 --save_dir data/tusimple_test_image/ret 
---weights_path model/tusimple_lanenet/tusimple_lanenet_vgg_2018-05-21-11-11-03.ckpt-94000 
+--weights_path path/to/your/model_weights_file 
 --image_path data/tusimple_test_image/
 ```
 If you set the save_dir argument the result will be saved in that folder or the result will not be saved but be 
@@ -80,8 +80,8 @@ instance use different pixel value to represent different lane field and 0 for t
 All your training image will be scaled into the same scale according to the config file.
 
 #### Train model
-In my experiment the training epochs are 94000, batch size is 4, initialized learning rate is 0.0001 and decrease by 
-multiply 0.96 every 5000 epochs. About training parameters you can check the global_configuration/config.py for details. 
+In my experiment the training epochs are 200000, batch size is 8, initialized learning rate is 0.0005 and decrease by 
+multiply 0.1 every 100000 epochs. About training parameters you can check the global_configuration/config.py for details. 
 You can switch --net argument to change the base encoder stage. If you choose --net vgg then the vgg16 will be used as 
 the base encoder stage and a pretrained parameters will be loaded and if you choose --net dense then the dense net will 
 be used as the base encoder stage instead and no pretrained parameters will be loaded. And you can modified the training 
@@ -113,8 +113,27 @@ The accuracy during training process rises as follows:
 
 Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you find it helps you.
 
+## Recently updates
+Adjust some basic cnn op according to the new tensorflow api. Use the 
+traditional SGD optimizer to optimize the whole model instead of the
+origin Adam optimizer used in the origin paper. I have found that the
+SGD optimizer will lead to more stable training process and will not 
+easily stuck into nan loss which may often happen when using the origin
+code.
+
+I have uploaded a new lanenet model trained on tusimple dataset using the
+new code here [new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0).
+You may download the new model weights and update the new code. To update
+the new code you just need to
+
+```
+git pull origin master
+```
+The rest are just the same as which mentioned above. And recently I will 
+release a new model trained on culane dataset.
+
 ## TODO
-- [ ] Add a embedding visualization tools to visualize the embedding feature map
-- [ ] Add detailed explanation of training the components of lanenet separately.
-- [ ] Training the model on different dataset
+- [x] Add a embedding visualization tools to visualize the embedding feature map
+- [x] Add detailed explanation of training the components of lanenet separately.
+- [x] Training the model on different dataset
 - [ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model
