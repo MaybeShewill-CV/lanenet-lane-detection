@@ -111,7 +111,7 @@ The `Instance Segmentation loss` drops as follows:
 The accuracy during training process rises as follows: 
 ![Training accuracy](https://github.com/TJCVRS/lanenet-lane-detection/blob/master/data/source_image/accuracy.png)
 
-Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you use if.
+Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you use it.
 
 ## Recently updates
 Adjust some basic cnn op according to the new tensorflow api. Use the 
