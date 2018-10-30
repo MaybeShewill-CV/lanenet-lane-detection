@@ -252,8 +252,3 @@ if __name__ == '__main__':
         # test hnet model on a batch of image
         test_lanenet_batch(image_dir=args.image_path, weights_path=args.weights_path,
                            save_dir=args.save_dir, use_gpu=args.use_gpu, batch_size=args.batch_size)
-
-    # test_net_hdmap('/media/baidu/Data/高精图像质检/20180716t162624_hb/20180716T164118',
-    #                '/home/baidu/Silly_Project/ICode/baidu/beec/lanenet-lane-detection/model/'
-    #                'tusimple_lanenet/tusimple_lanenet_vgg_2018-05-21-11-11-03.ckpt-94000',
-    #                '/media/baidu/Data/高精图像质检/20180716t162624_hb/lanenet_mask_ret')
