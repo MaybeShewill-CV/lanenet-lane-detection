@@ -89,6 +89,9 @@ class DataSet(object):
         idx_start = batch_size * self._next_batch_loop_count
         idx_end = batch_size * self._next_batch_loop_count + batch_size
 
+        if idx_start == 0 and idx_end > len(self._gt_label_binary_list):
+            raise ValueError('Batch size不能大于样本的总数量')
+
         if idx_end > len(self._gt_label_binary_list):
             self._random_dataset()
             self._next_batch_loop_count = 0
@@ -121,9 +124,7 @@ class DataSet(object):
 
 
 if __name__ == '__main__':
-    val = DataSet('/home/baidu/DataBase/Semantic_Segmentation/Kitti_Vision/data_road/lanenet_training/train.txt')
-    a1, a2, a3 = val.next_batch(1)
-    cv2.imwrite('test_binary_label.png', a2[0] * 255)
+    val = DataSet('/media/baidu/Data/Semantic_Segmentation/TUSimple_Lane_Detection/training/val.txt')
     b1, b2, b3 = val.next_batch(50)
     c1, c2, c3 = val.next_batch(50)
     dd, d2, d3 = val.next_batch(50)
