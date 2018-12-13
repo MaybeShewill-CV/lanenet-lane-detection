@@ -113,7 +113,7 @@ The accuracy during training process rises as follows:
 
 Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you use it.
 
-## Recently updates
+## Recently updates 2018.11.10
 Adjust some basic cnn op according to the new tensorflow api. Use the 
 traditional SGD optimizer to optimize the whole model instead of the
 origin Adam optimizer used in the origin paper. I have found that the
@@ -132,8 +132,31 @@ git pull origin master
 The rest are just the same as which mentioned above. And recently I will 
 release a new model trained on culane dataset.
 
+## Recently updates 2018.12.13
+Since a lot of user want a automatic tools to generate the training samples
+from the Tusimple Dataset. I upload the tools I use to generate the training
+samples. You need to firstly download the Tusimple dataset and unzip the 
+file to your local disk. Then run the following command to generate the 
+training samples and the train.txt file.
+
+```angular2html
+python tools/generate_tusimple_dataset.py --src_dir path/to/your/unzipped/file
+```
+
+The script will make the train folder and the test folder. The training 
+samples of origin rgb image, binary label image, instance label image will
+be automatically generated in the training/gt_image, training/gt_binary_image,
+training/gt_instance_image folder.You may check it yourself before start
+the training process.
+
+Pay attention that the script only process the training samples and you 
+need to select several lines from the train.txt to generate your own 
+val.txt file. In order to obtain the test images you can modify the 
+script on your own.
+
 ## TODO
 - [x] Add a embedding visualization tools to visualize the embedding feature map
 - [x] Add detailed explanation of training the components of lanenet separately.
 - [x] Training the model on different dataset
-- [ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model
+- [x] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model
+- [ ] Change the normalization function from BN to GN
