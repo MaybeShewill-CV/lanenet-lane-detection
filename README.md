@@ -158,5 +158,5 @@ script on your own.
 - [x] Add a embedding visualization tools to visualize the embedding feature map
 - [x] Add detailed explanation of training the components of lanenet separately.
 - [x] Training the model on different dataset
-- [x] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model
+- ~~[ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model~~
 - [ ] Change the normalization function from BN to GN
