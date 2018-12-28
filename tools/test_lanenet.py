@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 18-5-23 上午11:33
 # @Author  : Luo Yao
-# @Site    : http://icode.baidu.com/repos/baidu/personal-code/Luoyao
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : test_lanenet.py
 # @IDE: PyCharm Community Edition
 """
@@ -20,10 +20,6 @@ import glog as log
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-try:
-    from cv2 import cv2
-except ImportError:
-    pass
 
 from lanenet_model import lanenet_merge_model
 from lanenet_model import lanenet_cluster
