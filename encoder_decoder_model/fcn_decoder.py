@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 18-1-29 下午2:38
 # @Author  : Luo Yao
-# @Site    : http://icode.baidu.com/repos/baidu/personal-code/Luoyao
-# @File    : dilation_decoder.py
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
+# @File    : fcn_decoder.py
 # @IDE: PyCharm Community Edition
 """
 实现一个全卷积网络解码类

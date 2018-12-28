@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 18-1-31 上午11:21
 # @Author  : Luo Yao
-# @Site    : http://icode.baidu.com/repos/baidu/personal-code/Luoyao
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : global_config.py
 # @IDE: PyCharm Community Edition
 """

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 18-1-29 下午2:04
 # @Author  : Luo Yao
-# @Site    : http://icode.baidu.com/repos/baidu/personal-code/Luoyao
-# @File    : dilation_encoder.py
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
+# @File    : vgg_encoder.py
 # @IDE: PyCharm Community Edition
 """
 实现一个基于VGG16的特征编码类
