@@ -316,6 +316,37 @@ class CNNBaseModel(object):
         return tf.layers.batch_normalization(inputs=inputdata, training=is_training, name=name)
 
     @staticmethod
+    def layergn(inputdata, name, group_size=32, esp=1e-5):
+        """
+
+        :param inputdata:
+        :param name:
+        :param group_size:
+        :param esp:
+        :return:
+        """
+        with tf.variable_scope(name):
+            inputdata = tf.transpose(inputdata, [0, 3, 1, 2])
+            n, c, h, w = inputdata.get_shape().as_list()
+            group_size = min(group_size, c)
+            inputdata = tf.reshape(inputdata, [-1, group_size, c // group_size, h, w])
+            mean, var = tf.nn.moments(inputdata, [2, 3, 4], keep_dims=True)
+            inputdata = (inputdata - mean) / tf.sqrt(var + esp)
+
+            # 每个通道的gamma和beta
+            gamma = tf.Variable(tf.constant(1.0, shape=[c]), dtype=tf.float32, name='gamma')
+            beta = tf.Variable(tf.constant(0.0, shape=[c]), dtype=tf.float32, name='beta')
+            gamma = tf.reshape(gamma, [1, c, 1, 1])
+            beta = tf.reshape(beta, [1, c, 1, 1])
+
+            # 根据论文进行转换 [n, c, h, w, c] 到 [n, h, w, c]
+            output = tf.reshape(inputdata, [-1, c, h, w])
+            output = output * gamma + beta
+            output = tf.transpose(output, [0, 2, 3, 1])
+
+        return output
+
+    @staticmethod
     def squeeze(inputdata, axis=None, name=None):
         """
 
@@ -430,38 +461,20 @@ class CNNBaseModel(object):
         :param seed:
         :return:
         """
-        tf.set_random_seed(seed=seed)
 
         def f1():
-            """
-
-            :return:
-            """
-            with tf.variable_scope(name):
-                return input_tensor
+            input_shape = input_tensor.get_shape().as_list()
+            noise_shape = tf.constant(value=[input_shape[0], 1, 1, input_shape[3]])
+            return tf.nn.dropout(input_tensor, keep_prob, noise_shape, seed=seed, name="spatial_dropout")
 
         def f2():
-            """
+            return input_tensor
 
-            :return:
-            """
-            with tf.variable_scope(name):
-                num_feature_maps = [tf.shape(input_tensor)[0], tf.shape(input_tensor)[3]]
+        with tf.variable_scope(name_or_scope=name):
 
-                random_tensor = keep_prob
-                random_tensor += tf.random_uniform(num_feature_maps,
-                                                   seed=seed,
-                                                   dtype=input_tensor.dtype)
+            output = tf.cond(is_training, f1, f2)
 
-                binary_tensor = tf.floor(random_tensor)
-
-                binary_tensor = tf.reshape(binary_tensor,
-                                           [-1, 1, 1, tf.shape(input_tensor)[3]])
-                ret = input_tensor * binary_tensor
-                return ret
-
-        output = tf.cond(is_training, f2, f1)
-        return output
+            return output
 
     @staticmethod
     def lrelu(inputdata, name, alpha=0.2):
