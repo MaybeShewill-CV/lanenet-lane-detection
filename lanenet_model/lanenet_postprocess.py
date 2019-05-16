@@ -398,7 +398,7 @@ class LaneNetPostProcessor(object):
 
                 lane_color = self._color_map[index].tolist()
                 cv2.circle(source_image, (int(interpolation_src_pt_x),
-                                          int(interpolation_src_pt_y)), 4, lane_color, -1)
+                                          int(interpolation_src_pt_y)), 5, lane_color, -1)
         ret = {
             'mask_image': mask_image,
             'fit_params': fit_params,
