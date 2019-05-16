@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Time    : 18-5-18 下午7:31
-# @Author  : Luo Yao
+# @Author  : MaybeShewill-CV
 # @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : generate_tusimple_dataset.py
 # @IDE: PyCharm Community Edition
 """
-处理tusimple数据集脚本
+generate tusimple training dataset
 """
 import argparse
 import glob
@@ -34,10 +34,10 @@ def process_json_file(json_file_path, src_dir, ori_dst_dir, binary_dst_dir, inst
     """
 
     :param json_file_path:
-    :param src_dir: 原始clips文件路径
-    :param ori_dst_dir: rgb训练样本
-    :param binary_dst_dir: binary训练标签
-    :param instance_dst_dir: instance训练标签
+    :param src_dir: origin clip file path
+    :param ori_dst_dir:
+    :param binary_dst_dir:
+    :param instance_dst_dir:
     :return:
     """
     assert ops.exists(json_file_path), '{:s} not exist'.format(json_file_path)
@@ -99,11 +99,11 @@ def process_json_file(json_file_path, src_dir, ori_dst_dir, binary_dst_dir, inst
 
 def gen_train_sample(src_dir, b_gt_image_dir, i_gt_image_dir, image_dir):
     """
-    生成图像训练列表
+    generate sample index file
     :param src_dir:
-    :param b_gt_image_dir: 二值基准图
-    :param i_gt_image_dir: 实例分割基准图
-    :param image_dir: 原始图像
+    :param b_gt_image_dir:
+    :param i_gt_image_dir:
+    :param image_dir:
     :return:
     """
 

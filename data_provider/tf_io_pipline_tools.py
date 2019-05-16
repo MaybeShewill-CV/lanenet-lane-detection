@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Time    : 19-4-23 下午3:53
-# @Author  : LuoYao
-# @Site    : ICode
+# @Author  : MaybeShewill-CV
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : tf_io_pipline_tools.py
 # @IDE: PyCharm
 """
@@ -12,9 +12,9 @@ import os
 import os.path as ops
 
 import cv2
+import glog as log
 import numpy as np
 import tensorflow as tf
-import glog as log
 
 from config import global_config
 
@@ -74,6 +74,7 @@ def write_example_tfrecords(gt_images_paths, gt_binary_images_paths, gt_instance
                 _gt_binary_image = cv2.resize(_gt_binary_image,
                                               dsize=(RESIZE_IMAGE_WIDTH, RESIZE_IMAGE_HEIGHT),
                                               interpolation=cv2.INTER_NEAREST)
+                _gt_binary_image = np.array(_gt_binary_image / 255.0, dtype=np.uint8)
             _gt_binary_image_raw = _gt_binary_image.tostring()
 
             # prepare gt instance image
@@ -143,6 +144,11 @@ def augment_for_train(gt_image, gt_binary_image, gt_instance_image):
     gt_image = tf.cast(gt_image, tf.float32)
     gt_binary_image = tf.cast(gt_binary_image, tf.float32)
     gt_instance_image = tf.cast(gt_instance_image, tf.float32)
+
+    # apply random flip augmentation
+    gt_image, gt_binary_image, gt_instance_image = random_horizon_flip_batch_images(
+        gt_image, gt_binary_image, gt_instance_image
+    )
 
     # apply random crop image
     return random_crop_batch_images(

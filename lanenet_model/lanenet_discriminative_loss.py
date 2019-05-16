@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Time    : 18-5-11 下午3:48
-# @Author  : Luo Yao
+# @Author  : MaybeShewill-CV
 # @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : lanenet_discriminative_loss.py
 # @IDE: PyCharm Community Edition
 """
-实现LaneNet的Discriminative Loss函数
+Discriminative Loss for instance segmentation
 """
 import tensorflow as tf
 
@@ -22,7 +22,7 @@ def discriminative_loss_single(
         param_dist,
         param_reg):
     """
-    论文equ(1)提到的实例分割损失函数
+    discriminative loss
     :param prediction: inference of network
     :param correct_label: instance label
     :param feature_dim: feature dimension of prediction
@@ -33,27 +33,24 @@ def discriminative_loss_single(
     :param param_dist: weight for inter cluster distances
     :param param_reg: weight regularization
     """
-
-    # 像素对齐为一行
     correct_label = tf.reshape(
-        correct_label, [
-            label_shape[1] * label_shape[0]])
+        correct_label, [label_shape[1] * label_shape[0]]
+    )
     reshaped_pred = tf.reshape(
-        prediction, [
-            label_shape[1] * label_shape[0], feature_dim])
+        prediction, [label_shape[1] * label_shape[0], feature_dim]
+    )
 
-    # 统计实例个数
+    # calculate instance nums
     unique_labels, unique_id, counts = tf.unique_with_counts(correct_label)
     counts = tf.cast(counts, tf.float32)
     num_instances = tf.size(unique_labels)
 
-    # 计算pixel embedding均值向量
+    # calculate instance pixel embedding mean vec
     segmented_sum = tf.unsorted_segment_sum(
         reshaped_pred, unique_id, num_instances)
     mu = tf.div(segmented_sum, tf.reshape(counts, (-1, 1)))
     mu_expand = tf.gather(mu, unique_id)
 
-    # 计算公式的loss(var)
     distance = tf.norm(tf.subtract(mu_expand, reshaped_pred), axis=1)
     distance = tf.subtract(distance, delta_v)
     distance = tf.clip_by_value(distance, 0., distance)
@@ -64,7 +61,6 @@ def discriminative_loss_single(
     l_var = tf.reduce_sum(l_var)
     l_var = tf.divide(l_var, tf.cast(num_instances, tf.float32))
 
-    # 计算公式的loss(dist)
     mu_interleaved_rep = tf.tile(mu, [num_instances, 1])
     mu_band_rep = tf.tile(mu, [1, num_instances])
     mu_band_rep = tf.reshape(
@@ -75,7 +71,6 @@ def discriminative_loss_single(
 
     mu_diff = tf.subtract(mu_band_rep, mu_interleaved_rep)
 
-    # 去除掩模上的零点
     intermediate_tensor = tf.reduce_sum(tf.abs(mu_diff), axis=1)
     zero_vector = tf.zeros(1, dtype=tf.float32)
     bool_mask = tf.not_equal(intermediate_tensor, zero_vector)
@@ -88,10 +83,8 @@ def discriminative_loss_single(
 
     l_dist = tf.reduce_mean(mu_norm)
 
-    # 计算原始Discriminative Loss论文中提到的正则项损失
     l_reg = tf.reduce_mean(tf.norm(mu, axis=1))
 
-    # 合并损失按照原始Discriminative Loss论文中提到的参数合并
     param_scale = 1.
     l_var = param_var * l_var
     l_dist = param_dist * l_dist
@@ -105,7 +98,7 @@ def discriminative_loss_single(
 def discriminative_loss(prediction, correct_label, feature_dim, image_shape,
                         delta_v, delta_d, param_var, param_dist, param_reg):
     """
-    按照论文的思想迭代计算loss损失
+
     :return: discriminative loss and its three components
     """
 
@@ -124,18 +117,14 @@ def discriminative_loss(prediction, correct_label, feature_dim, image_shape,
         return label, batch, out_loss, out_var, out_dist, out_reg, i + 1
 
     # TensorArray is a data structure that support dynamic writing
-    output_ta_loss = tf.TensorArray(dtype=tf.float32,
-                                    size=0,
-                                    dynamic_size=True)
-    output_ta_var = tf.TensorArray(dtype=tf.float32,
-                                   size=0,
-                                   dynamic_size=True)
-    output_ta_dist = tf.TensorArray(dtype=tf.float32,
-                                    size=0,
-                                    dynamic_size=True)
-    output_ta_reg = tf.TensorArray(dtype=tf.float32,
-                                   size=0,
-                                   dynamic_size=True)
+    output_ta_loss = tf.TensorArray(
+        dtype=tf.float32, size=0, dynamic_size=True)
+    output_ta_var = tf.TensorArray(
+        dtype=tf.float32, size=0, dynamic_size=True)
+    output_ta_dist = tf.TensorArray(
+        dtype=tf.float32, size=0, dynamic_size=True)
+    output_ta_reg = tf.TensorArray(
+        dtype=tf.float32, size=0, dynamic_size=True)
 
     _, _, out_loss_op, out_var_op, out_dist_op, out_reg_op, _ = tf.while_loop(
         cond, body, [

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Time    : 19-4-23 下午3:54
-# @Author  : LuoYao
-# @Site    : ICode
+# @Author  : MaybeShewill-CV
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : lanenet_data_feed_pipline.py
 # @IDE: PyCharm
 """
 Lanenet data feed pip line
 """
 import argparse
+import glob
 import os
 import os.path as ops
 import random
 
-import glob
 import glog as log
 import tensorflow as tf
 
@@ -39,6 +39,7 @@ class LaneNetDataProducer(object):
     """
     Convert raw image file into tfrecords
     """
+
     def __init__(self, dataset_dir):
         """
 
@@ -68,6 +69,7 @@ class LaneNetDataProducer(object):
         :param step_size: generate a tfrecord every step_size examples
         :return:
         """
+
         def _read_training_example_index_file(_index_file_path):
 
             assert ops.exists(_index_file_path)
@@ -232,6 +234,7 @@ class LaneNetDataProducer(object):
         testing and validation. Each image folder are processed separately
         :return:
         """
+
         def _gather_example_info():
             """
 
@@ -240,7 +243,6 @@ class LaneNetDataProducer(object):
             _info = []
 
             for _gt_image_path in glob.glob('{:s}/*.png'.format(self._gt_image_dir)):
-
                 _gt_binary_image_name = ops.split(_gt_image_path)[1]
                 _gt_binary_image_path = ops.join(self._gt_binary_image_dir, _gt_binary_image_name)
                 _gt_instance_image_name = ops.split(_gt_image_path)[1]
@@ -258,7 +260,6 @@ class LaneNetDataProducer(object):
             return _info
 
         def _split_training_examples(_example_info):
-
             random.shuffle(_example_info)
 
             _example_nums = len(_example_info)
@@ -293,6 +294,7 @@ class LaneNetDataFeeder(object):
     """
     Read training examples from tfrecords for nsfw model
     """
+
     def __init__(self, dataset_dir, flags='train'):
         """
 
@@ -323,7 +325,9 @@ class LaneNetDataFeeder(object):
         if not num_epochs:
             num_epochs = None
 
-        tfrecords_file_paths = glob.glob('{:s}/{:s}*.tfrecords'.format(self._tfrecords_dir, self._dataset_flags))
+        tfrecords_file_paths = glob.glob('{:s}/{:s}*.tfrecords'.format(
+            self._tfrecords_dir, self._dataset_flags)
+        )
         random.shuffle(tfrecords_file_paths)
 
         with tf.name_scope('input_tensor'):
@@ -362,7 +366,6 @@ class LaneNetDataFeeder(object):
 
 
 if __name__ == '__main__':
-
     # init args
     args = init_args()
 
@@ -378,7 +381,6 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     with tf.Session() as sess:
-
         gt, gt_binary, gt_instance = sess.run([batch_gt, batch_gt_binary, batch_gt_instance])
 
         gt_img = np.array((gt[0] + 1.0) * 127.5, dtype=np.uint8)
@@ -391,6 +393,10 @@ if __name__ == '__main__':
         print(gt_img.shape)
         print(gt_binary[0].shape)
         print(gt_instance[0].shape)
+
+        import cv2
+
+        cv2.imwrite('fuck.png', gt_img)
 
         plt.figure('gt')
         plt.imshow(gt_img[:, :, (2, 1, 0)])
