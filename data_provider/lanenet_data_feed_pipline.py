@@ -371,39 +371,5 @@ if __name__ == '__main__':
 
     assert ops.exists(args.dataset_dir), '{:s} not exist'.format(args.dataset_dir)
 
-    # producer = LaneNetDataProducer(dataset_dir=args.dataset_dir)
-    # producer.generate_tfrecords(save_dir=args.tfrecords_dir, step_size=1000)
-
-    feeder = LaneNetDataFeeder(dataset_dir=args.dataset_dir)
-    batch_gt, batch_gt_binary, batch_gt_instance = feeder.inputs(4, 1)
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    with tf.Session() as sess:
-        gt, gt_binary, gt_instance = sess.run([batch_gt, batch_gt_binary, batch_gt_instance])
-
-        gt_img = np.array((gt[0] + 1.0) * 127.5, dtype=np.uint8)
-        gt_binary_img = np.array(gt_binary[0][:, :, 0], dtype=np.uint8)
-        gt_instance_img = np.array(gt_instance[0][:, :, 0], dtype=np.uint8)
-
-        print(np.unique(gt_binary_img))
-        print(np.unique(gt_instance_img))
-
-        print(gt_img.shape)
-        print(gt_binary[0].shape)
-        print(gt_instance[0].shape)
-
-        import cv2
-
-        cv2.imwrite('fuck.png', gt_img)
-
-        plt.figure('gt')
-        plt.imshow(gt_img[:, :, (2, 1, 0)])
-        plt.figure('gt_binary')
-        plt.imshow(gt_binary_img, cmap='gray')
-        plt.figure('gt_instance')
-        plt.imshow(gt_instance_img, cmap='gray')
-        plt.show()
-
-    print('Fuck')
+    producer = LaneNetDataProducer(dataset_dir=args.dataset_dir)
+    producer.generate_tfrecords(save_dir=args.tfrecords_dir, step_size=1000)
