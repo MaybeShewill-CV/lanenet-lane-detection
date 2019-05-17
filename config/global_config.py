@@ -36,10 +36,6 @@ __C.TRAIN.TF_ALLOW_GROWTH = True
 __C.TRAIN.BATCH_SIZE = 4
 # Set the shadownet validation batch size
 __C.TRAIN.VAL_BATCH_SIZE = 4
-# Set the learning rate decay steps
-__C.TRAIN.LR_DECAY_STEPS = 210000
-# Set the learning rate decay rate
-__C.TRAIN.LR_DECAY_RATE = 0.1
 # Set the class numbers
 __C.TRAIN.CLASSES_NUMS = 2
 # Set the image height
