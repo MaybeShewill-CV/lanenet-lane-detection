@@ -177,4 +177,4 @@ New model weights can be found [here](https://www.dropbox.com/sh/tnsf0lw6psszvy4
 - [x] Add detailed explanation of training the components of lanenet separately.
 - [x] Training the model on different dataset
 - ~~[ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model~~
-- ~~[ ] Change the normalization function from BN to GN
+- ~~[ ] Change the normalization function from BN to GN~~
