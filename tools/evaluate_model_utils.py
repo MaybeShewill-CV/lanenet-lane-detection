@@ -25,7 +25,9 @@ def calculate_model_precision(input_tensor, label_tensor):
     idx = tf.where(tf.equal(final_output, 1))
     pix_cls_ret = tf.gather_nd(label_tensor, idx)
     accuracy = tf.count_nonzero(pix_cls_ret)
-    accuracy = tf.divide(accuracy, tf.cast(tf.shape(pix_cls_ret)[0], tf.int64))
+    accuracy = tf.divide(
+        accuracy,
+        tf.cast(tf.shape(tf.gather_nd(label_tensor, tf.where(tf.equal(label_tensor, 1))))[0], tf.int64))
 
     return accuracy
 
