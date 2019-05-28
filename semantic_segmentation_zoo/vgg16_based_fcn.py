@@ -108,28 +108,8 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
 
             deconv = self.relu(inputdata=deconv, name='deconv_relu')
 
-            fuse_feats = tf.concat(
-                [previous_feats_tensor, deconv],
-                axis=-1, name='fuse_feats'
-            )
-
-            conv_weights_stddev = tf.sqrt(
-                tf.divide(tf.constant(2.0, tf.float32),
-                          tf.multiply(tf.cast(kernel_size * kernel_size, tf.float32),
-                                      tf.cast(tf.shape(fuse_feats)[3], tf.float32)))
-            )
-            conv_weights_init = tf.truncated_normal_initializer(
-                mean=0.0, stddev=conv_weights_stddev)
-
-            fuse_feats = self.conv2d(
-                inputdata=fuse_feats,
-                out_channel=out_channels_nums,
-                kernel_size=3,
-                padding='SAME',
-                stride=1,
-                w_init=conv_weights_init,
-                use_bias=use_bias,
-                name='fuse_conv'
+            fuse_feats = tf.add(
+                previous_feats_tensor, deconv, name='fuse_feats'
             )
 
             if need_activate:

@@ -27,7 +27,7 @@ __C.TRAIN.VAL_DISPLAY_STEP = 1000
 # Set the momentum parameter of the optimizer
 __C.TRAIN.MOMENTUM = 0.9
 # Set the initial learning rate
-__C.TRAIN.LEARNING_RATE = 0.001
+__C.TRAIN.LEARNING_RATE = 0.0005
 # Set the GPU resource used during training process
 __C.TRAIN.GPU_MEMORY_FRACTION = 0.95
 # Set the GPU allow growth parameter during tensorflow training process
@@ -71,4 +71,4 @@ __C.POSTPROCESS.MIN_AREA_THRESHOLD = 100
 # Set the post process dbscan search radius threshold
 __C.POSTPROCESS.DBSCAN_EPS = 0.35
 # Set the post process dbscan min samples threshold
-__C.POSTPROCESS.DBSCAN_MIN_SAMPLES = 800
+__C.POSTPROCESS.DBSCAN_MIN_SAMPLES = 1500

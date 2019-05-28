@@ -42,8 +42,8 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
 
         return tf.equal(phase, tf.constant('train', dtype=tf.string))
 
-    @staticmethod
-    def _compute_class_weighted_cross_entropy_loss(onehot_labels, logits, classes_weights):
+    @classmethod
+    def _compute_class_weighted_cross_entropy_loss(cls, onehot_labels, logits, classes_weights):
         """
 
         :param onehot_labels:
@@ -83,15 +83,27 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                         shape=[binary_label.get_shape().as_list()[0],
                                binary_label.get_shape().as_list()[1],
                                binary_label.get_shape().as_list()[2]]),
-                    depth=2,
+                    depth=CFG.TRAIN.CLASSES_NUMS,
                     axis=-1
                 )
 
-                classes_weights = [1.4506131276238088, 21.525424601474068]
+                binary_label_plain = tf.reshape(
+                    binary_label,
+                    shape=[binary_label.get_shape().as_list()[0] *
+                           binary_label.get_shape().as_list()[1] *
+                           binary_label.get_shape().as_list()[2] *
+                           binary_label.get_shape().as_list()[3]])
+                unique_labels, unique_id, counts = tf.unique_with_counts(binary_label_plain)
+                counts = tf.cast(counts, tf.float32)
+                inverse_weights = tf.divide(
+                    1.0,
+                    tf.log(tf.add(tf.divide(counts, tf.reduce_sum(counts)), tf.constant(1.02)))
+                )
+
                 binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
                     onehot_labels=binary_label_onehot,
                     logits=binary_seg_logits,
-                    classes_weights=classes_weights
+                    classes_weights=inverse_weights
                 )
 
             # calculate class weighted instance seg loss
@@ -108,10 +120,10 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     name='pix_embedding_conv'
                 )
                 pix_image_shape = (pix_embedding.get_shape().as_list()[1], pix_embedding.get_shape().as_list()[2])
-                disc_loss, l_var, l_dist, l_reg = \
+                instance_segmentation_loss, l_var, l_dist, l_reg = \
                     lanenet_discriminative_loss.discriminative_loss(
                         pix_embedding, instance_label, CFG.TRAIN.EMBEDDING_FEATS_DIMS,
-                        pix_image_shape, 0.5, 3.5, 1.0, 1.0, 0.001
+                        pix_image_shape, 0.5, 3.0, 1.0, 1.0, 0.001
                     )
 
             l2_reg_loss = tf.constant(0.0, tf.float32)
@@ -121,14 +133,14 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 else:
                     l2_reg_loss = tf.add(l2_reg_loss, tf.nn.l2_loss(vv))
             l2_reg_loss *= 0.001
-            total_loss = 0.5 * binary_segmenatation_loss + 0.5 * disc_loss + l2_reg_loss
+            total_loss = binary_segmenatation_loss + instance_segmentation_loss + l2_reg_loss
 
             ret = {
                 'total_loss': total_loss,
                 'binary_seg_logits': binary_seg_logits,
                 'instance_seg_logits': pix_embedding,
                 'binary_seg_loss': binary_segmenatation_loss,
-                'discriminative_loss': disc_loss
+                'discriminative_loss': instance_segmentation_loss
             }
 
         return ret

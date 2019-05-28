@@ -173,6 +173,7 @@ class _LaneNetCluster(object):
                 'origin_features': None,
                 'cluster_nums': 0,
                 'db_labels': None,
+                'unique_labels': None,
                 'cluster_center': None
             }
             return ret
