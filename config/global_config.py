@@ -71,4 +71,4 @@ __C.POSTPROCESS.MIN_AREA_THRESHOLD = 100
 # Set the post process dbscan search radius threshold
 __C.POSTPROCESS.DBSCAN_EPS = 0.35
 # Set the post process dbscan min samples threshold
-__C.POSTPROCESS.DBSCAN_MIN_SAMPLES = 1500
+__C.POSTPROCESS.DBSCAN_MIN_SAMPLES = 1000
