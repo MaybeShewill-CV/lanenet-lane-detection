@@ -240,6 +240,9 @@ class _LaneNetCluster(object):
         unique_labels = dbscan_cluster_result['unique_labels']
         coord = get_lane_embedding_feats_result['lane_coordinates']
 
+        if db_labels is None:
+            return None, None
+
         lane_coords = []
 
         for index, label in enumerate(unique_labels.tolist()):
@@ -331,6 +334,13 @@ class LaneNetPostProcessor(object):
             binary_seg_result=morphological_ret,
             instance_seg_result=instance_seg_result
         )
+
+        if mask_image is None:
+            return {
+                'mask_image': None,
+                'fit_params': None,
+                'source_image': None,
+            }
 
         # lane line fit
         fit_params = []
