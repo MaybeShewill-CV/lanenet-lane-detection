@@ -83,7 +83,7 @@ Use the script here to generate the tensorflow records file
 ```
 python data_provider/lanenet_data_feed_pipline.py 
 --dataset_dir ./data/training_data_example
---save_dir ./data/training_data_example/tfrecords
+--tfrecords_dir ./data/training_data_example/tfrecords
 ```
 
 #### Train model
