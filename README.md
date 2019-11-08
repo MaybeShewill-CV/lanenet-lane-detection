@@ -171,6 +171,27 @@ script on your own.
 
 New model weights can be found [here](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0)
 
+## MNN Project
+
+Add tools to convert lanenet tensorflow ckpt model into mnn model and deploy
+the model on mobile device
+
+#### Freeze your tensorflow ckpt model weights file
+```
+cd LANENET_PROJECT_ROOT_DIR
+python mnn_project/freeze_lanenet_model.py -w lanenet.ckpt -s lanenet.pb
+```
+
+#### Convert pb model into mnn model
+```
+cd MNN_PROJECT_ROOT_DIR/tools/converter/build
+./MNNConver -f TF --modelFile lanenet.pb --MNNModel lanenet.mnn --bizCode MNN
+```
+
+#### Add lanenet source code into MNN project 
+
+Add lanenet source code into MNN project and modified CMakeList.txt to 
+compile the executable binary file.
 
 ## TODO
 - [x] Add a embedding visualization tools to visualize the embedding feature map
@@ -178,3 +199,10 @@ New model weights can be found [here](https://www.dropbox.com/sh/tnsf0lw6psszvy4
 - [x] Training the model on different dataset
 - ~~[ ] Adjust the lanenet hnet model and merge the hnet model to the main lanenet model~~
 - ~~[ ] Change the normalization function from BN to GN~~
+
+## Acknowledgement
+
+The lanenet project refers to the following projects:
+
+- [MNN](https://github.com/alibaba/MNN)
+- [SimpleDBSCAN](https://github.com/CallmeNezha/SimpleDBSCAN)
