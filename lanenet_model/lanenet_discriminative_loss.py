@@ -51,7 +51,7 @@ def discriminative_loss_single(
     mu = tf.div(segmented_sum, tf.reshape(counts, (-1, 1)))
     mu_expand = tf.gather(mu, unique_id)
 
-    distance = tf.norm(tf.subtract(mu_expand, reshaped_pred), axis=1)
+    distance = tf.norm(tf.subtract(mu_expand, reshaped_pred), axis=1, ord=1)
     distance = tf.subtract(distance, delta_v)
     distance = tf.clip_by_value(distance, 0., distance)
     distance = tf.square(distance)
@@ -76,14 +76,14 @@ def discriminative_loss_single(
     bool_mask = tf.not_equal(intermediate_tensor, zero_vector)
     mu_diff_bool = tf.boolean_mask(mu_diff, bool_mask)
 
-    mu_norm = tf.norm(mu_diff_bool, axis=1)
+    mu_norm = tf.norm(mu_diff_bool, axis=1, ord=1)
     mu_norm = tf.subtract(2. * delta_d, mu_norm)
     mu_norm = tf.clip_by_value(mu_norm, 0., mu_norm)
     mu_norm = tf.square(mu_norm)
 
     l_dist = tf.reduce_mean(mu_norm)
 
-    l_reg = tf.reduce_mean(tf.norm(mu, axis=1))
+    l_reg = tf.reduce_mean(tf.norm(mu, axis=1, ord=1))
 
     param_scale = 1.
     l_var = param_var * l_var
