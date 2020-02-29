@@ -25,7 +25,7 @@ the input pipeline I implemented now need to be improved to achieve a real time 
 
 The trained lanenet model weights files are stored in 
 [new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0). You can 
-download the model and put them in folder model/tusimple_lanenet/
+download the model and put them in folder model/tusimple_lanenet_vgg/
 
 You can test a single image on the trained model as follows
 
