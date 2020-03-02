@@ -25,7 +25,7 @@ the input pipeline I implemented now need to be improved to achieve a real time 
 
 The trained lanenet model weights files are stored in 
 [new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0). You can 
-download the model and put them in folder model/tusimple_lanenet/
+download the model and put them in folder model/tusimple_lanenet_vgg/
 
 You can test a single image on the trained model as follows
 
@@ -55,7 +55,7 @@ If you want to evaluate the model on the whole tusimple test dataset you may cal
 ```
 python tools/evaluate_lanenet_on_tusimple.py 
 --image_dir ROOT_DIR/TUSIMPLE_DATASET/test_set/clips 
---weights_path ./model/tusimple_lanenet_vgg/tusimple_lanenet.ckpt 
+--weights_path ./model/tusimple_lanenet_vgg/tusimple_lanenet_vgg.ckpt 
 --save_dir ROOT_DIR/TUSIMPLE_DATASET/test_set/test_output
 ```
 If you set the save_dir argument the result will be saved in that folder 
