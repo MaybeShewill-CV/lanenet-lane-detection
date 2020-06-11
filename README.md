@@ -208,5 +208,6 @@ The lanenet project refers to the following projects:
 - [SimpleDBSCAN](https://github.com/CallmeNezha/SimpleDBSCAN)
 
 ## Contact
+
 Scan the following QR to disscuss :)
 ![qr](./data/source_image/qr.jpg)
