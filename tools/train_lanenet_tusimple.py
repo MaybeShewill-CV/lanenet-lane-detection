@@ -75,16 +75,13 @@ def minmax_scale(input_arr):
     return output_arr
 
 
-def load_pretrained_weights(variables, pretrained_weights_path, sess):
+def load_pretrained_weights(variables, sess):
     """
 
     :param variables:
-    :param pretrained_weights_path:
     :param sess:
     :return:
     """
-    assert ops.exists(pretrained_weights_path), '{:s} not exist'.format(pretrained_weights_path)
-
     pretrained_weights = np.load(
         './data/vgg16.npy', encoding='latin1').item()
 
@@ -225,167 +222,166 @@ def train_lanenet(dataset_dir, weights_path=None, net_flag='vgg'):
         dataset_dir=dataset_dir, flags='val'
     )
 
-    with tf.device('/gpu:1'):
-        # set lanenet
-        train_net = lanenet.LaneNet(net_flag=net_flag, phase='train', reuse=False)
-        val_net = lanenet.LaneNet(net_flag=net_flag, phase='val', reuse=True)
+    # set lanenet
+    train_net = lanenet.LaneNet(net_flag=net_flag, phase='train', reuse=False)
+    val_net = lanenet.LaneNet(net_flag=net_flag, phase='val', reuse=True)
 
-        # set compute graph node for training
-        train_images, train_binary_labels, train_instance_labels = train_dataset.inputs(
-            CFG.TRAIN.BATCH_SIZE, 1
-        )
+    # set compute graph node for training
+    train_images, train_binary_labels, train_instance_labels = train_dataset.inputs(
+        CFG.TRAIN.BATCH_SIZE, 1
+    )
 
-        train_compute_ret = train_net.compute_loss(
-            input_tensor=train_images, binary_label=train_binary_labels,
-            instance_label=train_instance_labels, name='lanenet_model'
-        )
-        train_total_loss = train_compute_ret['total_loss']
-        train_binary_seg_loss = train_compute_ret['binary_seg_loss']
-        train_disc_loss = train_compute_ret['discriminative_loss']
-        train_pix_embedding = train_compute_ret['instance_seg_logits']
+    train_compute_ret = train_net.compute_loss(
+        input_tensor=train_images, binary_label=train_binary_labels,
+        instance_label=train_instance_labels, name='lanenet_model'
+    )
+    train_total_loss = train_compute_ret['total_loss']
+    train_binary_seg_loss = train_compute_ret['binary_seg_loss']
+    train_disc_loss = train_compute_ret['discriminative_loss']
+    train_pix_embedding = train_compute_ret['instance_seg_logits']
 
-        train_prediction_logits = train_compute_ret['binary_seg_logits']
-        train_prediction_score = tf.nn.softmax(logits=train_prediction_logits)
-        train_prediction = tf.argmax(train_prediction_score, axis=-1)
+    train_prediction_logits = train_compute_ret['binary_seg_logits']
+    train_prediction_score = tf.nn.softmax(logits=train_prediction_logits)
+    train_prediction = tf.argmax(train_prediction_score, axis=-1)
 
-        train_accuracy = evaluate_model_utils.calculate_model_precision(
-            train_compute_ret['binary_seg_logits'], train_binary_labels
-        )
-        train_fp = evaluate_model_utils.calculate_model_fp(
-            train_compute_ret['binary_seg_logits'], train_binary_labels
-        )
-        train_fn = evaluate_model_utils.calculate_model_fn(
-            train_compute_ret['binary_seg_logits'], train_binary_labels
-        )
-        train_binary_seg_ret_for_summary = evaluate_model_utils.get_image_summary(
-            img=train_prediction
-        )
-        train_embedding_ret_for_summary = evaluate_model_utils.get_image_summary(
-            img=train_pix_embedding
-        )
+    train_accuracy = evaluate_model_utils.calculate_model_precision(
+        train_compute_ret['binary_seg_logits'], train_binary_labels
+    )
+    train_fp = evaluate_model_utils.calculate_model_fp(
+        train_compute_ret['binary_seg_logits'], train_binary_labels
+    )
+    train_fn = evaluate_model_utils.calculate_model_fn(
+        train_compute_ret['binary_seg_logits'], train_binary_labels
+    )
+    train_binary_seg_ret_for_summary = evaluate_model_utils.get_image_summary(
+        img=train_prediction
+    )
+    train_embedding_ret_for_summary = evaluate_model_utils.get_image_summary(
+        img=train_pix_embedding
+    )
 
-        train_cost_scalar = tf.summary.scalar(
-            name='train_cost', tensor=train_total_loss
-        )
-        train_accuracy_scalar = tf.summary.scalar(
-            name='train_accuracy', tensor=train_accuracy
-        )
-        train_binary_seg_loss_scalar = tf.summary.scalar(
-            name='train_binary_seg_loss', tensor=train_binary_seg_loss
-        )
-        train_instance_seg_loss_scalar = tf.summary.scalar(
-            name='train_instance_seg_loss', tensor=train_disc_loss
-        )
-        train_fn_scalar = tf.summary.scalar(
-            name='train_fn', tensor=train_fn
-        )
-        train_fp_scalar = tf.summary.scalar(
-            name='train_fp', tensor=train_fp
-        )
-        train_binary_seg_ret_img = tf.summary.image(
-            name='train_binary_seg_ret', tensor=train_binary_seg_ret_for_summary
-        )
-        train_embedding_feats_ret_img = tf.summary.image(
-            name='train_embedding_feats_ret', tensor=train_embedding_ret_for_summary
-        )
-        train_merge_summary_op = tf.summary.merge(
-            [train_accuracy_scalar, train_cost_scalar, train_binary_seg_loss_scalar,
-             train_instance_seg_loss_scalar, train_fn_scalar, train_fp_scalar,
-             train_binary_seg_ret_img, train_embedding_feats_ret_img]
-        )
+    train_cost_scalar = tf.summary.scalar(
+        name='train_cost', tensor=train_total_loss
+    )
+    train_accuracy_scalar = tf.summary.scalar(
+        name='train_accuracy', tensor=train_accuracy
+    )
+    train_binary_seg_loss_scalar = tf.summary.scalar(
+        name='train_binary_seg_loss', tensor=train_binary_seg_loss
+    )
+    train_instance_seg_loss_scalar = tf.summary.scalar(
+        name='train_instance_seg_loss', tensor=train_disc_loss
+    )
+    train_fn_scalar = tf.summary.scalar(
+        name='train_fn', tensor=train_fn
+    )
+    train_fp_scalar = tf.summary.scalar(
+        name='train_fp', tensor=train_fp
+    )
+    train_binary_seg_ret_img = tf.summary.image(
+        name='train_binary_seg_ret', tensor=train_binary_seg_ret_for_summary
+    )
+    train_embedding_feats_ret_img = tf.summary.image(
+        name='train_embedding_feats_ret', tensor=train_embedding_ret_for_summary
+    )
+    train_merge_summary_op = tf.summary.merge(
+        [train_accuracy_scalar, train_cost_scalar, train_binary_seg_loss_scalar,
+         train_instance_seg_loss_scalar, train_fn_scalar, train_fp_scalar,
+         train_binary_seg_ret_img, train_embedding_feats_ret_img]
+    )
 
-        # set compute graph node for validation
-        val_images, val_binary_labels, val_instance_labels = val_dataset.inputs(
-            CFG.TRAIN.VAL_BATCH_SIZE, 1
-        )
+    # set compute graph node for validation
+    val_images, val_binary_labels, val_instance_labels = val_dataset.inputs(
+        CFG.TRAIN.VAL_BATCH_SIZE, 1
+    )
 
-        val_compute_ret = val_net.compute_loss(
-            input_tensor=val_images, binary_label=val_binary_labels,
-            instance_label=val_instance_labels, name='lanenet_model'
-        )
-        val_total_loss = val_compute_ret['total_loss']
-        val_binary_seg_loss = val_compute_ret['binary_seg_loss']
-        val_disc_loss = val_compute_ret['discriminative_loss']
-        val_pix_embedding = val_compute_ret['instance_seg_logits']
+    val_compute_ret = val_net.compute_loss(
+        input_tensor=val_images, binary_label=val_binary_labels,
+        instance_label=val_instance_labels, name='lanenet_model'
+    )
+    val_total_loss = val_compute_ret['total_loss']
+    val_binary_seg_loss = val_compute_ret['binary_seg_loss']
+    val_disc_loss = val_compute_ret['discriminative_loss']
+    val_pix_embedding = val_compute_ret['instance_seg_logits']
 
-        val_prediction_logits = val_compute_ret['binary_seg_logits']
-        val_prediction_score = tf.nn.softmax(logits=val_prediction_logits)
-        val_prediction = tf.argmax(val_prediction_score, axis=-1)
+    val_prediction_logits = val_compute_ret['binary_seg_logits']
+    val_prediction_score = tf.nn.softmax(logits=val_prediction_logits)
+    val_prediction = tf.argmax(val_prediction_score, axis=-1)
 
-        val_accuracy = evaluate_model_utils.calculate_model_precision(
-            val_compute_ret['binary_seg_logits'], val_binary_labels
-        )
-        val_fp = evaluate_model_utils.calculate_model_fp(
-            val_compute_ret['binary_seg_logits'], val_binary_labels
-        )
-        val_fn = evaluate_model_utils.calculate_model_fn(
-            val_compute_ret['binary_seg_logits'], val_binary_labels
-        )
-        val_binary_seg_ret_for_summary = evaluate_model_utils.get_image_summary(
-            img=val_prediction
-        )
-        val_embedding_ret_for_summary = evaluate_model_utils.get_image_summary(
-            img=val_pix_embedding
-        )
+    val_accuracy = evaluate_model_utils.calculate_model_precision(
+        val_compute_ret['binary_seg_logits'], val_binary_labels
+    )
+    val_fp = evaluate_model_utils.calculate_model_fp(
+        val_compute_ret['binary_seg_logits'], val_binary_labels
+    )
+    val_fn = evaluate_model_utils.calculate_model_fn(
+        val_compute_ret['binary_seg_logits'], val_binary_labels
+    )
+    val_binary_seg_ret_for_summary = evaluate_model_utils.get_image_summary(
+        img=val_prediction
+    )
+    val_embedding_ret_for_summary = evaluate_model_utils.get_image_summary(
+        img=val_pix_embedding
+    )
 
-        val_cost_scalar = tf.summary.scalar(
-            name='val_cost', tensor=val_total_loss
-        )
-        val_accuracy_scalar = tf.summary.scalar(
-            name='val_accuracy', tensor=val_accuracy
-        )
-        val_binary_seg_loss_scalar = tf.summary.scalar(
-            name='val_binary_seg_loss', tensor=val_binary_seg_loss
-        )
-        val_instance_seg_loss_scalar = tf.summary.scalar(
-            name='val_instance_seg_loss', tensor=val_disc_loss
-        )
-        val_fn_scalar = tf.summary.scalar(
-            name='val_fn', tensor=val_fn
-        )
-        val_fp_scalar = tf.summary.scalar(
-            name='val_fp', tensor=val_fp
-        )
-        val_binary_seg_ret_img = tf.summary.image(
-            name='val_binary_seg_ret', tensor=val_binary_seg_ret_for_summary
-        )
-        val_embedding_feats_ret_img = tf.summary.image(
-            name='val_embedding_feats_ret', tensor=val_embedding_ret_for_summary
-        )
-        val_merge_summary_op = tf.summary.merge(
-            [val_accuracy_scalar, val_cost_scalar, val_binary_seg_loss_scalar,
-             val_instance_seg_loss_scalar, val_fn_scalar, val_fp_scalar,
-             val_binary_seg_ret_img, val_embedding_feats_ret_img]
-        )
+    val_cost_scalar = tf.summary.scalar(
+        name='val_cost', tensor=val_total_loss
+    )
+    val_accuracy_scalar = tf.summary.scalar(
+        name='val_accuracy', tensor=val_accuracy
+    )
+    val_binary_seg_loss_scalar = tf.summary.scalar(
+        name='val_binary_seg_loss', tensor=val_binary_seg_loss
+    )
+    val_instance_seg_loss_scalar = tf.summary.scalar(
+        name='val_instance_seg_loss', tensor=val_disc_loss
+    )
+    val_fn_scalar = tf.summary.scalar(
+        name='val_fn', tensor=val_fn
+    )
+    val_fp_scalar = tf.summary.scalar(
+        name='val_fp', tensor=val_fp
+    )
+    val_binary_seg_ret_img = tf.summary.image(
+        name='val_binary_seg_ret', tensor=val_binary_seg_ret_for_summary
+    )
+    val_embedding_feats_ret_img = tf.summary.image(
+        name='val_embedding_feats_ret', tensor=val_embedding_ret_for_summary
+    )
+    val_merge_summary_op = tf.summary.merge(
+        [val_accuracy_scalar, val_cost_scalar, val_binary_seg_loss_scalar,
+         val_instance_seg_loss_scalar, val_fn_scalar, val_fp_scalar,
+         val_binary_seg_ret_img, val_embedding_feats_ret_img]
+    )
 
-        # set optimizer
-        global_step = tf.Variable(0, trainable=False)
-        learning_rate = tf.train.polynomial_decay(
-            learning_rate=CFG.TRAIN.LEARNING_RATE,
-            global_step=global_step,
-            decay_steps=CFG.TRAIN.EPOCHS,
-            power=0.9
-        )
+    # set optimizer
+    global_step = tf.Variable(0, trainable=False)
+    learning_rate = tf.train.polynomial_decay(
+        learning_rate=CFG.TRAIN.LEARNING_RATE,
+        global_step=global_step,
+        decay_steps=CFG.TRAIN.EPOCHS,
+        power=0.9
+    )
 
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            optimizer = tf.train.MomentumOptimizer(
-                learning_rate=learning_rate, momentum=CFG.TRAIN.MOMENTUM).minimize(
-                loss=train_total_loss,
-                var_list=tf.trainable_variables(),
-                global_step=global_step
-            )
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        optimizer = tf.train.MomentumOptimizer(
+            learning_rate=learning_rate, momentum=CFG.TRAIN.MOMENTUM).minimize(
+            loss=train_total_loss,
+            var_list=tf.trainable_variables(),
+            global_step=global_step
+        )
 
     # Set tf model save path
-    model_save_dir = 'model/tusimple_lanenet_{:s}'.format(net_flag)
+    model_save_dir = 'model/culane_lanenet_{:s}'.format(net_flag)
     os.makedirs(model_save_dir, exist_ok=True)
     train_start_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-    model_name = 'tusimple_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
+    model_name = 'culane_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
     model_save_path = ops.join(model_save_dir, model_name)
     saver = tf.train.Saver()
 
     # Set tf summary save path
-    tboard_save_path = 'tboard/tusimple_lanenet_{:s}'.format(net_flag)
+    tboard_save_path = 'tboard/culane_lanenet_{:s}'.format(net_flag)
     os.makedirs(tboard_save_path, exist_ok=True)
 
     # Set sess configuration
@@ -411,32 +407,48 @@ def train_lanenet(dataset_dir, weights_path=None, net_flag='vgg'):
             log.info('Training from scratch')
             init = tf.global_variables_initializer()
             sess.run(init)
+            load_pretrained_weights(tf.trainable_variables(), sess)
         else:
             log.info('Restore model from last model checkpoint {:s}'.format(weights_path))
             saver.restore(sess=sess, save_path=weights_path)
-
-        if net_flag == 'vgg' and weights_path is None:
-            load_pretrained_weights(tf.trainable_variables(), './data/vgg16.npy', sess)
 
         train_cost_time_mean = []
         for epoch in range(train_epochs):
             # training part
             t_start = time.time()
 
+            train_embeddings, train_binary_seg_imgs, train_gt_imgs, \
+                train_binary_gt_labels, train_instance_gt_labels = sess.run([
+                    train_pix_embedding, train_prediction,
+                    train_images, train_binary_labels, train_instance_labels])
+
+            val_embeddings, val_binary_seg_imgs, val_gt_imgs, \
+                val_binary_gt_labels, val_instance_gt_labels = sess.run([
+                    val_pix_embedding, val_prediction,
+                    val_images, val_binary_labels, val_instance_labels
+            ])
+
+            is_label_valid = True
+            for gt_binary_label in train_binary_gt_labels:
+                unique_pixels = np.unique(gt_binary_label)
+                if unique_pixels.shape[0] == 1 and unique_pixels[0] == 0:
+                    is_label_valid = False
+                    break
+            if not is_label_valid:
+                continue
+            for val_gt_binary_label in val_binary_gt_labels:
+                unique_pixels = np.unique(val_gt_binary_label)
+                if unique_pixels.shape[0] == 1 and unique_pixels[0] == 0:
+                    is_label_valid = False
+                    break
+            if not is_label_valid:
+                continue
+
             _, train_c, train_accuracy_figure, train_fn_figure, train_fp_figure, \
-                lr, train_summary, train_binary_loss, \
-                train_instance_loss, train_embeddings, train_binary_seg_imgs, train_gt_imgs, \
-                train_binary_gt_labels, train_instance_gt_labels = \
+                lr, train_summary, train_binary_loss, train_instance_loss = \
                 sess.run([optimizer, train_total_loss, train_accuracy, train_fn, train_fp,
                           learning_rate, train_merge_summary_op, train_binary_seg_loss,
-                          train_disc_loss, train_pix_embedding, train_prediction,
-                          train_images, train_binary_labels, train_instance_labels])
-
-            if math.isnan(train_c) or math.isnan(train_binary_loss) or math.isnan(train_instance_loss):
-                log.error('cost is: {:.5f}'.format(train_c))
-                log.error('binary cost is: {:.5f}'.format(train_binary_loss))
-                log.error('instance cost is: {:.5f}'.format(train_instance_loss))
-                return
+                          train_disc_loss])
 
             if epoch % 100 == 0:
                 record_training_intermediate_result(
@@ -444,6 +456,17 @@ def train_lanenet(dataset_dir, weights_path=None, net_flag='vgg'):
                     gt_instance_labels=train_instance_gt_labels, binary_seg_images=train_binary_seg_imgs,
                     pix_embeddings=train_embeddings
                 )
+
+            if math.isnan(train_c) or math.isnan(train_binary_loss) or math.isnan(train_instance_loss):
+                log.error('cost is: {:.5f}'.format(train_c))
+                log.error('binary cost is: {:.5f}'.format(train_binary_loss))
+                log.error('instance cost is: {:.5f}'.format(train_instance_loss))
+                record_training_intermediate_result(
+                    gt_images=train_gt_imgs, gt_binary_labels=train_binary_gt_labels,
+                    gt_instance_labels=train_instance_gt_labels, binary_seg_images=train_binary_seg_imgs,
+                    pix_embeddings=train_embeddings
+                )
+                return
             summary_writer.add_summary(summary=train_summary, global_step=epoch)
 
             if epoch % CFG.TRAIN.DISPLAY_STEP == 0:
@@ -456,21 +479,23 @@ def train_lanenet(dataset_dir, weights_path=None, net_flag='vgg'):
 
             # validation part
             val_c, val_accuracy_figure, val_fn_figure, val_fp_figure, \
-                val_summary, val_binary_loss, val_instance_loss, \
-                val_embeddings, val_binary_seg_imgs, val_gt_imgs, \
-                val_binary_gt_labels, val_instance_gt_labels = \
+                val_summary, val_binary_loss, val_instance_loss = \
                 sess.run([val_total_loss, val_accuracy, val_fn, val_fp,
                           val_merge_summary_op, val_binary_seg_loss,
-                          val_disc_loss, val_pix_embedding, val_prediction,
-                          val_images, val_binary_labels, val_instance_labels])
+                          val_disc_loss])
+
+            if epoch % 100 == 0:
+                record_training_intermediate_result(
+                    gt_images=val_gt_imgs, gt_binary_labels=val_binary_gt_labels,
+                    gt_instance_labels=val_instance_gt_labels, binary_seg_images=val_binary_seg_imgs,
+                    pix_embeddings=val_embeddings, flag='val'
+                )
 
             if math.isnan(val_c) or math.isnan(val_binary_loss) or math.isnan(val_instance_loss):
                 log.error('cost is: {:.5f}'.format(val_c))
                 log.error('binary cost is: {:.5f}'.format(val_binary_loss))
                 log.error('instance cost is: {:.5f}'.format(val_instance_loss))
-                return
 
-            if epoch % 100 == 0:
                 record_training_intermediate_result(
                     gt_images=val_gt_imgs, gt_binary_labels=val_binary_gt_labels,
                     gt_instance_labels=val_instance_gt_labels, binary_seg_images=val_binary_seg_imgs,
@@ -582,7 +607,7 @@ def train_lanenet_multi_gpu(dataset_dir, weights_path=None, net_flag='vgg'):
                         batchnorm_updates_op)
 
     # Set tf summary save path
-    tboard_save_path = 'tboard/tusimple_lanenet_multi_gpu_{:s}'.format(net_flag)
+    tboard_save_path = 'tboard/culane_lanenet_multi_gpu_{:s}'.format(net_flag)
     os.makedirs(tboard_save_path, exist_ok=True)
 
     summary_writer = tf.summary.FileWriter(tboard_save_path)
@@ -604,10 +629,10 @@ def train_lanenet_multi_gpu(dataset_dir, weights_path=None, net_flag='vgg'):
 
     # set tensorflow saver
     saver = tf.train.Saver()
-    model_save_dir = 'model/tusimple_lanenet_multi_gpu_{:s}'.format(net_flag)
+    model_save_dir = 'model/culane_lanenet_multi_gpu_{:s}'.format(net_flag)
     os.makedirs(model_save_dir, exist_ok=True)
     train_start_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-    model_name = 'tusimple_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
+    model_name = 'culane_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
     model_save_path = ops.join(model_save_dir, model_name)
 
     # set sess config
@@ -636,6 +661,7 @@ def train_lanenet_multi_gpu(dataset_dir, weights_path=None, net_flag='vgg'):
             log.info('Training from scratch')
             init = tf.global_variables_initializer()
             sess.run(init)
+            load_pretrained_weights(tf.trainable_variables(), sess)
         else:
             log.info('Restore model from last model checkpoint {:s}'.format(weights_path))
             saver.restore(sess=sess, save_path=weights_path)
@@ -648,10 +674,20 @@ def train_lanenet_multi_gpu(dataset_dir, weights_path=None, net_flag='vgg'):
             # training part
             t_start = time.time()
 
-            _, train_loss_value, train_summary, lr = \
+            _, train_loss_value, train_summary, lr, \
+                train_gt_imgs, train_binary_gt_lables, train_instance_gt_labels, \
+                train_binary_seg_imgs, train_embeddings = \
                 sess.run(
-                    fetches=[train_op, avg_train_loss,
-                             train_merge_summary_op, learning_rate]
+                    fetches=[
+                        train_op,
+                        avg_train_loss,
+                        train_merge_summary_op,
+                        learning_rate,
+                        train_images,
+                        train_binary_labels,
+                        train_instance_labels,
+
+                    ]
                 )
 
             if math.isnan(train_loss_value):
