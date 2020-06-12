@@ -15,7 +15,7 @@ import loguru
 
 from local_utils.config_utils import parse_config_utils
 
-CFG = parse_config_utils.cityscapes_cfg
+CFG = parse_config_utils.lanenet_cfg
 
 
 def get_logger(log_file_name_prefix):
@@ -49,5 +49,5 @@ def get_logger(log_file_name_prefix):
 
 
 INIT_LOG = get_logger(
-    log_file_name_prefix='bisenet_train'
+    log_file_name_prefix='lanenet_train'
 )
