@@ -16,14 +16,14 @@ import glog as log
 import numpy as np
 import tensorflow as tf
 
-from config import global_config
+from local_utils.config_utils import parse_config_utils
 
-CFG = global_config.cfg
+CFG = parse_config_utils.lanenet_cfg
 
-RESIZE_IMAGE_HEIGHT = CFG.TRAIN.IMG_HEIGHT + CFG.TRAIN.CROP_PAD_SIZE
-RESIZE_IMAGE_WIDTH = CFG.TRAIN.IMG_WIDTH + CFG.TRAIN.CROP_PAD_SIZE
-CROP_IMAGE_HEIGHT = CFG.TRAIN.IMG_HEIGHT
-CROP_IMAGE_WIDTH = CFG.TRAIN.IMG_WIDTH
+RESIZE_IMAGE_HEIGHT = CFG.AUG.TRAIN_CROP_SIZE[1] + CFG.AUG.CROP_PAD_SIZE
+RESIZE_IMAGE_WIDTH = CFG.AUG.TRAIN_CROP_SIZE[0] + CFG.AUG.CROP_PAD_SIZE
+CROP_IMAGE_HEIGHT = CFG.AUG.TRAIN_CROP_SIZE[1]
+CROP_IMAGE_WIDTH = CFG.AUG.TRAIN_CROP_SIZE[0]
 
 
 def int64_feature(value):

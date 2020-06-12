@@ -8,31 +8,21 @@
 """
 Lanenet data feed pip line
 """
-import argparse
+import time
 import glob
 import os
 import os.path as ops
 import random
 
-import glog as log
+import numpy as np
 import tensorflow as tf
+import loguru
 
-from config import global_config
+from local_utils.config_utils import parse_config_utils
 from data_provider import tf_io_pipline_tools
 
-CFG = global_config.cfg
-
-
-def init_args():
-    """
-
-    :return:
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_dir', type=str, help='The source nsfw data dir path')
-    parser.add_argument('--tfrecords_dir', type=str, help='The dir path to save converted tfrecords')
-
-    return parser.parse_args()
+CFG = parse_config_utils.lanenet_cfg
+LOG = loguru.logger
 
 
 class LaneNetDataProducer(object):
@@ -40,20 +30,19 @@ class LaneNetDataProducer(object):
     Convert raw image file into tfrecords
     """
 
-    def __init__(self, dataset_dir):
+    def __init__(self):
         """
 
-        :param dataset_dir:
         """
-        self._dataset_dir = dataset_dir
+        self._dataset_dir = CFG.DATASET.DATA_DIR
+        self._tfrecords_save_dir = ops.join(self._dataset_dir, 'tfrecords')
+        self._train_example_index_file_path = CFG.DATASET.TRAIN_FILE_LIST
+        self._test_example_index_file_path = CFG.DATASET.TEST_FILE_LIST
+        self._val_example_index_file_path = CFG.DATASET.VAL_FILE_LIST
 
-        self._gt_image_dir = ops.join(dataset_dir, 'gt_image')
-        self._gt_binary_image_dir = ops.join(dataset_dir, 'gt_binary_image')
-        self._gt_instance_image_dir = ops.join(dataset_dir, 'gt_instance_image')
-
-        self._train_example_index_file_path = ops.join(self._dataset_dir, 'train.txt')
-        self._test_example_index_file_path = ops.join(self._dataset_dir, 'test.txt')
-        self._val_example_index_file_path = ops.join(self._dataset_dir, 'val.txt')
+        self._gt_image_dir = ops.join(self._dataset_dir, 'gt_image')
+        self._gt_binary_image_dir = ops.join(self._dataset_dir, 'gt_binary_image')
+        self._gt_instance_image_dir = ops.join(self._dataset_dir, 'gt_instance_image')
 
         if not self._is_source_data_complete():
             raise ValueError('Source image data is not complete, '
@@ -62,11 +51,9 @@ class LaneNetDataProducer(object):
         if not self._is_training_sample_index_file_complete():
             self._generate_training_example_index_file()
 
-    def generate_tfrecords(self, save_dir, step_size=10000):
+    def generate_tfrecords(self):
         """
         Generate tensorflow records file
-        :param save_dir:
-        :param step_size: generate a tfrecord every step_size examples
         :return:
         """
 
@@ -93,118 +80,59 @@ class LaneNetDataProducer(object):
 
             return ret
 
-        def _split_writing_tfrecords_task(
-                _example_gt_paths, _example_gt_binary_paths, _example_gt_instance_paths, _flags='train'):
-
-            _split_example_gt_paths = []
-            _split_example_gt_binary_paths = []
-            _split_example_gt_instance_paths = []
-            _split_tfrecords_save_paths = []
-
-            for i in range(0, len(_example_gt_paths), step_size):
-                _split_example_gt_paths.append(_example_gt_paths[i:i + step_size])
-                _split_example_gt_binary_paths.append(_example_gt_binary_paths[i:i + step_size])
-                _split_example_gt_instance_paths.append(_example_gt_instance_paths[i:i + step_size])
-
-                if i + step_size > len(_example_gt_paths):
-                    _split_tfrecords_save_paths.append(
-                        ops.join(save_dir, '{:s}_{:d}_{:d}.tfrecords'.format(_flags, i, len(_example_gt_paths))))
-                else:
-                    _split_tfrecords_save_paths.append(
-                        ops.join(save_dir, '{:s}_{:d}_{:d}.tfrecords'.format(_flags, i, i + step_size)))
-
-            ret = {
-                'gt_paths': _split_example_gt_paths,
-                'gt_binary_paths': _split_example_gt_binary_paths,
-                'gt_instance_paths': _split_example_gt_instance_paths,
-                'tfrecords_paths': _split_tfrecords_save_paths
-            }
-
-            return ret
-
         # make save dirs
-        os.makedirs(save_dir, exist_ok=True)
+        os.makedirs(self._tfrecords_save_dir, exist_ok=True)
 
         # start generating training example tfrecords
-        log.info('Start generating training example tfrecords')
+        LOG.info('Start generating training example tfrecords')
 
         # collecting train images paths info
         train_image_paths_info = _read_training_example_index_file(self._train_example_index_file_path)
         train_gt_images_paths = train_image_paths_info['gt_path_info']
         train_gt_binary_images_paths = train_image_paths_info['gt_binary_path_info']
         train_gt_instance_images_paths = train_image_paths_info['gt_instance_path_info']
-
-        # split training images according step size
-        train_split_result = _split_writing_tfrecords_task(
-            train_gt_images_paths, train_gt_binary_images_paths, train_gt_instance_images_paths, _flags='train')
-        train_example_gt_paths = train_split_result['gt_paths']
-        train_example_gt_binary_paths = train_split_result['gt_binary_paths']
-        train_example_gt_instance_paths = train_split_result['gt_instance_paths']
-        train_example_tfrecords_paths = train_split_result['tfrecords_paths']
-
-        for index, example_gt_paths in enumerate(train_example_gt_paths):
-            tf_io_pipline_tools.write_example_tfrecords(
-                example_gt_paths,
-                train_example_gt_binary_paths[index],
-                train_example_gt_instance_paths[index],
-                train_example_tfrecords_paths[index]
-            )
-
-        log.info('Generating training example tfrecords complete')
+        train_tfrecords_paths = ops.join(self._tfrecords_save_dir, 'tusimple_train.tfrecords')
+        tf_io_pipline_tools.write_example_tfrecords(
+            train_gt_images_paths,
+            train_gt_binary_images_paths,
+            train_gt_instance_images_paths,
+            train_tfrecords_paths
+        )
+        LOG.info('Generating training example tfrecords complete')
 
         # start generating validation example tfrecords
-        log.info('Start generating validation example tfrecords')
+        LOG.info('Start generating validation example tfrecords')
 
         # collecting validation images paths info
         val_image_paths_info = _read_training_example_index_file(self._val_example_index_file_path)
         val_gt_images_paths = val_image_paths_info['gt_path_info']
         val_gt_binary_images_paths = val_image_paths_info['gt_binary_path_info']
         val_gt_instance_images_paths = val_image_paths_info['gt_instance_path_info']
-
-        # split validation images according step size
-        val_split_result = _split_writing_tfrecords_task(
-            val_gt_images_paths, val_gt_binary_images_paths, val_gt_instance_images_paths, _flags='val')
-        val_example_gt_paths = val_split_result['gt_paths']
-        val_example_gt_binary_paths = val_split_result['gt_binary_paths']
-        val_example_gt_instance_paths = val_split_result['gt_instance_paths']
-        val_example_tfrecords_paths = val_split_result['tfrecords_paths']
-
-        for index, example_gt_paths in enumerate(val_example_gt_paths):
-            tf_io_pipline_tools.write_example_tfrecords(
-                example_gt_paths,
-                val_example_gt_binary_paths[index],
-                val_example_gt_instance_paths[index],
-                val_example_tfrecords_paths[index]
-            )
-
-        log.info('Generating validation example tfrecords complete')
+        val_tfrecords_paths = ops.join(self._tfrecords_save_dir, 'tusimple_val.tfrecords')
+        tf_io_pipline_tools.write_example_tfrecords(
+            val_gt_images_paths,
+            val_gt_binary_images_paths,
+            val_gt_instance_images_paths,
+            val_tfrecords_paths
+        )
+        LOG.info('Generating validation example tfrecords complete')
 
         # generate test example tfrecords
-        log.info('Start generating testing example tfrecords')
+        LOG.info('Start generating testing example tfrecords')
 
         # collecting test images paths info
         test_image_paths_info = _read_training_example_index_file(self._test_example_index_file_path)
         test_gt_images_paths = test_image_paths_info['gt_path_info']
         test_gt_binary_images_paths = test_image_paths_info['gt_binary_path_info']
         test_gt_instance_images_paths = test_image_paths_info['gt_instance_path_info']
-
-        # split validating images according step size
-        test_split_result = _split_writing_tfrecords_task(
-            test_gt_images_paths, test_gt_binary_images_paths, test_gt_instance_images_paths, _flags='test')
-        test_example_gt_paths = test_split_result['gt_paths']
-        test_example_gt_binary_paths = test_split_result['gt_binary_paths']
-        test_example_gt_instance_paths = test_split_result['gt_instance_paths']
-        test_example_tfrecords_paths = test_split_result['tfrecords_paths']
-
-        for index, example_gt_paths in enumerate(test_example_gt_paths):
-            tf_io_pipline_tools.write_example_tfrecords(
-                example_gt_paths,
-                test_example_gt_binary_paths[index],
-                test_example_gt_instance_paths[index],
-                test_example_tfrecords_paths[index]
-            )
-
-        log.info('Generating testing example tfrecords complete')
+        test_tfrecords_paths = ops.join(self._tfrecords_save_dir, 'tusimple_test.tfrecords')
+        tf_io_pipline_tools.write_example_tfrecords(
+            test_gt_images_paths,
+            test_gt_binary_images_paths,
+            test_gt_instance_images_paths,
+            test_tfrecords_paths
+        )
+        LOG.info('Generating testing example tfrecords complete')
 
         return
 
@@ -285,7 +213,7 @@ class LaneNetDataProducer(object):
         with open(ops.join(self._dataset_dir, 'val.txt'), 'w') as file:
             file.write(''.join(val_example_info))
 
-        log.info('Generating training example index file complete')
+        LOG.info('Generating training example index file complete')
 
         return
 
@@ -295,81 +223,114 @@ class LaneNetDataFeeder(object):
     Read training examples from tfrecords for nsfw model
     """
 
-    def __init__(self, dataset_dir, flags='train'):
+    def __init__(self, flags='train'):
         """
 
-        :param dataset_dir:
         :param flags:
         """
-        self._dataset_dir = dataset_dir
+        self._dataset_dir = CFG.DATASET.DATA_DIR
+        self._epoch_nums = CFG.TRAIN.EPOCH_NUMS
+        self._train_batch_size = CFG.TRAIN.BATCH_SIZE
+        self._val_batch_size = CFG.TRAIN.VAL_BATCH_SIZE
 
-        self._tfrecords_dir = ops.join(dataset_dir, 'tfrecords')
+        self._tfrecords_dir = ops.join(self._dataset_dir, 'tfrecords')
         if not ops.exists(self._tfrecords_dir):
             raise ValueError('{:s} not exist, please check again'.format(self._tfrecords_dir))
 
         self._dataset_flags = flags.lower()
-        if self._dataset_flags not in ['train', 'test', 'val']:
-            raise ValueError('flags of the data feeder should be \'train\', \'test\', \'val\'')
+        if self._dataset_flags not in ['train', 'val']:
+            raise ValueError('flags of the data feeder should be \'train\', \'val\'')
 
-    def inputs(self, batch_size, num_epochs):
+    def __len__(self):
+        """
+
+        :return:
+        """
+        tfrecords_file_paths = ops.join(self._tfrecords_dir, 'tusimple_{:s}.tfrecords'.format(self._dataset_flags))
+        assert ops.exists(tfrecords_file_paths), '{:s} not exist'.format(tfrecords_file_paths)
+
+        sample_counts = 0
+        sample_counts += sum(1 for _ in tf.python_io.tf_record_iterator(tfrecords_file_paths))
+        if self._dataset_flags == 'train':
+            num_batchs = int(np.ceil(sample_counts / self._train_batch_size))
+        elif self._dataset_flags == 'val':
+            num_batchs = int(np.ceil(sample_counts / self._val_batch_size))
+        else:
+            raise ValueError('Wrong dataset flags')
+        return num_batchs
+
+    def next_batch(self, batch_size):
         """
         dataset feed pipline input
         :param batch_size:
-        :param num_epochs:
         :return: A tuple (images, labels), where:
                     * images is a float tensor with shape [batch_size, H, W, C]
                       in the range [-0.5, 0.5].
                     * labels is an int32 tensor with shape [batch_size] with the true label,
                       a number in the range [0, CLASS_NUMS).
         """
-        if not num_epochs:
-            num_epochs = None
+        tfrecords_file_paths = ops.join(self._tfrecords_dir, 'tusimple_{:s}.tfrecords'.format(self._dataset_flags))
+        assert ops.exists(tfrecords_file_paths), '{:s} not exist'.format(tfrecords_file_paths)
 
-        tfrecords_file_paths = glob.glob('{:s}/{:s}*.tfrecords'.format(
-            self._tfrecords_dir, self._dataset_flags)
-        )
-        random.shuffle(tfrecords_file_paths)
+        with tf.device('/cpu:0'):
+            with tf.name_scope('input_tensor'):
 
-        with tf.name_scope('input_tensor'):
+                # TFRecordDataset opens a binary file and reads one record at a time.
+                # `tfrecords_file_paths` could also be a list of filenames, which will be read in order.
+                dataset = tf.data.TFRecordDataset(tfrecords_file_paths)
 
-            # TFRecordDataset opens a binary file and reads one record at a time.
-            # `tfrecords_file_paths` could also be a list of filenames, which will be read in order.
-            dataset = tf.data.TFRecordDataset(tfrecords_file_paths)
+                # The map transformation takes a function and applies it to every element
+                # of the dataset.
+                dataset = dataset.map(
+                    map_func=tf_io_pipline_tools.decode,
+                    num_parallel_calls=CFG.DATASET.CPU_MULTI_PROCESS_NUMS
+                )
+                if self._dataset_flags == 'train':
+                    dataset = dataset.map(
+                        map_func=tf_io_pipline_tools.augment_for_train,
+                        num_parallel_calls=CFG.DATASET.CPU_MULTI_PROCESS_NUMS
+                    )
+                elif self._dataset_flags == 'val':
+                    dataset = dataset.map(
+                        map_func=tf_io_pipline_tools.augment_for_test,
+                        num_parallel_calls=CFG.DATASET.CPU_MULTI_PROCESS_NUMS
+                    )
+                dataset = dataset.map(
+                    map_func=tf_io_pipline_tools.normalize,
+                    num_parallel_calls=CFG.DATASET.CPU_MULTI_PROCESS_NUMS
+                )
 
-            # The map transformation takes a function and applies it to every element
-            # of the dataset.
-            dataset = dataset.map(map_func=tf_io_pipline_tools.decode,
-                                  num_parallel_calls=CFG.TRAIN.CPU_MULTI_PROCESS_NUMS)
-            if self._dataset_flags != 'test':
-                dataset = dataset.map(map_func=tf_io_pipline_tools.augment_for_train,
-                                      num_parallel_calls=CFG.TRAIN.CPU_MULTI_PROCESS_NUMS)
-            else:
-                dataset = dataset.map(map_func=tf_io_pipline_tools.augment_for_test,
-                                      num_parallel_calls=CFG.TRAIN.CPU_MULTI_PROCESS_NUMS)
-            dataset = dataset.map(map_func=tf_io_pipline_tools.normalize,
-                                  num_parallel_calls=CFG.TRAIN.CPU_MULTI_PROCESS_NUMS)
-
-            # The shuffle transformation uses a finite-sized buffer to shuffle elements
-            # in memory. The parameter is the number of elements in the buffer. For
-            # completely uniform shuffling, set the parameter to be the same as the
-            # number of elements in the dataset.
-            if self._dataset_flags != 'test':
-                dataset = dataset.shuffle(buffer_size=1000)
+                dataset = dataset.shuffle(buffer_size=1024)
                 # repeat num epochs
-                dataset = dataset.repeat()
+                dataset = dataset.repeat(self._epoch_nums)
 
-            dataset = dataset.batch(batch_size, drop_remainder=True)
+                dataset = dataset.batch(batch_size=batch_size, drop_remainder=True)
+                dataset = dataset.prefetch(buffer_size=batch_size * 16)
 
-            iterator = dataset.make_one_shot_iterator()
+                iterator = dataset.make_one_shot_iterator()
 
         return iterator.get_next(name='{:s}_IteratorGetNext'.format(self._dataset_flags))
 
 
 if __name__ == '__main__':
-    # init args
-    args = init_args()
+    """
+    test code
+    """
+    train_dataset = LaneNetDataFeeder(flags='train')
 
-    assert ops.exists(args.dataset_dir), '{:s} not exist'.format(args.dataset_dir)
+    src_images, binary_label_images, instance_label_images = train_dataset.next_batch(batch_size=8)
 
-    producer = LaneNetDataProducer(dataset_dir=args.dataset_dir)
-    producer.generate_tfrecords(save_dir=args.tfrecords_dir, step_size=1000)
+    count = 1
+    with tf.Session() as sess:
+        while True:
+            try:
+                t_start = time.time()
+                images, binary_labels, instance_labels = sess.run(
+                    [src_images, binary_label_images, instance_label_images]
+                )
+                print('Iter: {:d}, cost time: {:.5f}s'.format(count, time.time() - t_start))
+                count += 1
+                src_image = np.array((images[0] + 1.0) * 127.5, dtype=np.uint8)
+            except tf.errors.OutOfRangeError as err:
+                print(err)
+                raise err
