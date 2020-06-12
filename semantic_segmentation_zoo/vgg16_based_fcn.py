@@ -12,10 +12,10 @@ import collections
 
 import tensorflow as tf
 
-from config import global_config
 from semantic_segmentation_zoo import cnn_basenet
+from local_utils.config_utils import parse_config_utils
 
-CFG = global_config.cfg
+CFG = parse_config_utils.lanenet_cfg
 
 
 class VGG16FCN(cnn_basenet.CNNBaseModel):
@@ -30,6 +30,7 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
         self._phase = phase
         self._is_training = self._is_net_for_training()
         self._net_intermediate_results = collections.OrderedDict()
+        self._class_nums = CFG.DATASET.NUM_CLASSES
 
     def _is_net_for_training(self):
         """
@@ -305,10 +306,12 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
                     mean=0.0, stddev=binary_final_logits_conv_weights_stddev)
 
                 binary_final_logits = self.conv2d(
-                    inputdata=decode_stage_1_fuse, out_channel=CFG.TRAIN.CLASSES_NUMS,
+                    inputdata=decode_stage_1_fuse,
+                    out_channel=self._class_nums,
                     kernel_size=1, use_bias=False,
                     w_init=binary_final_logits_conv_weights_init,
-                    name='binary_final_logits')
+                    name='binary_final_logits'
+                )
 
                 self._net_intermediate_results['binary_segment_logits'] = {
                     'data': binary_final_logits,

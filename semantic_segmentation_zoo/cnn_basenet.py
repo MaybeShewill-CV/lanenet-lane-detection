@@ -88,6 +88,41 @@ class CNNBaseModel(object):
         return ret
 
     @staticmethod
+    def depthwise_conv(input_tensor, kernel_size, name, depth_multiplier=1,
+                       padding='SAME', stride=1):
+        """
+
+        :param input_tensor:
+        :param kernel_size:
+        :param name:
+        :param depth_multiplier:
+        :param padding:
+        :param stride:
+        :return:
+        """
+        with tf.variable_scope(name_or_scope=name):
+            in_shape = input_tensor.get_shape().as_list()
+            in_channel = in_shape[3]
+            padding = padding.upper()
+
+            depthwise_filter_shape = [kernel_size, kernel_size] + [in_channel, depth_multiplier]
+            w_init = tf.contrib.layers.variance_scaling_initializer()
+
+            depthwise_filter = tf.get_variable(
+                name='depthwise_filter_w', shape=depthwise_filter_shape,
+                initializer=w_init
+            )
+
+            result = tf.nn.depthwise_conv2d(
+                input=input_tensor,
+                filter=depthwise_filter,
+                strides=[1, stride, stride, 1],
+                padding=padding,
+                name='depthwise_conv_output'
+            )
+        return result
+
+    @staticmethod
     def relu(inputdata, name=None):
         """
 
@@ -304,16 +339,17 @@ class CNNBaseModel(object):
         return ret
 
     @staticmethod
-    def layerbn(inputdata, is_training, name):
+    def layerbn(inputdata, is_training, name, scale=True):
         """
 
         :param inputdata:
         :param is_training:
         :param name:
+        :param scale:
         :return:
         """
 
-        return tf.layers.batch_normalization(inputs=inputdata, training=is_training, name=name)
+        return tf.layers.batch_normalization(inputs=inputdata, training=is_training, name=name, scale=scale)
 
     @staticmethod
     def layergn(inputdata, name, group_size=32, esp=1e-5):

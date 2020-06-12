@@ -12,10 +12,10 @@ import collections
 
 import tensorflow as tf
 
-from bisenet_model import cnn_basenet
+from semantic_segmentation_zoo import cnn_basenet
 from local_utils.config_utils import parse_config_utils
 
-CFG = parse_config_utils.cityscapes_cfg_v2
+CFG = parse_config_utils.lanenet_cfg
 
 
 class _StemBlock(cnn_basenet.CNNBaseModel):
@@ -763,6 +763,8 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
             'ce': self._context_embedding_block,
         }
 
+        self._net_intermediate_results = collections.OrderedDict()
+
     def _is_net_for_training(self):
         """
         if the net is used for training or not
@@ -835,105 +837,6 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
             else:
                 result = self.layerbn(inputdata=result, is_training=self._is_training, name='bn', scale=True)
         return result
-
-    @classmethod
-    def _compute_cross_entropy_loss(cls, seg_logits, labels, class_nums, name):
-        """
-
-        :param seg_logits:
-        :param labels:
-        :param class_nums:
-        :param name:
-        :return:
-        """
-        with tf.variable_scope(name_or_scope=name):
-            # first check if the logits' shape is matched with the labels'
-            seg_logits_shape = seg_logits.shape[1:3]
-            labels_shape = labels.shape[1:3]
-            seg_logits = tf.cond(
-                tf.reduce_all(tf.equal(seg_logits_shape, labels_shape)),
-                true_fn=lambda: seg_logits,
-                false_fn=lambda: tf.image.resize_bilinear(seg_logits, labels_shape)
-            )
-            seg_logits = tf.reshape(seg_logits, [-1, class_nums])
-            labels = tf.reshape(labels, [-1, ])
-            indices = tf.squeeze(tf.where(tf.less_equal(labels, class_nums - 1)), 1)
-            seg_logits = tf.gather(seg_logits, indices)
-            labels = tf.cast(tf.gather(labels, indices), tf.int32)
-
-            # compute cross entropy loss
-            loss = tf.reduce_mean(
-                tf.nn.sparse_softmax_cross_entropy_with_logits(
-                    labels=labels,
-                    logits=seg_logits
-                ),
-                name='cross_entropy_loss'
-            )
-        return loss
-
-    @classmethod
-    def _compute_ohem_cross_entropy_loss(cls, seg_logits, labels, class_nums, name, thresh, n_min):
-        """
-
-        :param seg_logits:
-        :param labels:
-        :param class_nums:
-        :param name:
-        :return:
-        """
-        with tf.variable_scope(name_or_scope=name):
-            # first check if the logits' shape is matched with the labels'
-            seg_logits_shape = seg_logits.shape[1:3]
-            labels_shape = labels.shape[1:3]
-            seg_logits = tf.cond(
-                tf.reduce_all(tf.equal(seg_logits_shape, labels_shape)),
-                true_fn=lambda: seg_logits,
-                false_fn=lambda: tf.image.resize_bilinear(seg_logits, labels_shape)
-            )
-            seg_logits = tf.reshape(seg_logits, [-1, class_nums])
-            labels = tf.reshape(labels, [-1, ])
-            indices = tf.squeeze(tf.where(tf.less_equal(labels, class_nums - 1)), 1)
-            seg_logits = tf.gather(seg_logits, indices)
-            labels = tf.cast(tf.gather(labels, indices), tf.int32)
-
-            # compute cross entropy loss
-            loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                labels=labels,
-                logits=seg_logits
-            )
-            loss, _ = tf.nn.top_k(loss, tf.size(loss), sorted=True)
-
-            # apply ohem
-            ohem_thresh = tf.multiply(-1.0, tf.math.log(thresh), name='ohem_score_thresh')
-            ohem_cond = tf.greater(loss[n_min], ohem_thresh)
-            loss_select = tf.cond(
-                pred=ohem_cond,
-                true_fn=lambda: tf.gather(loss, tf.squeeze(tf.where(tf.greater(loss, ohem_thresh)), 1)),
-                false_fn=lambda: loss[:n_min]
-            )
-            loss_value = tf.reduce_mean(loss_select, name='ohem_cross_entropy_loss')
-        return loss_value
-
-    @classmethod
-    def _compute_l2_reg_loss(cls, var_list, weights_decay, name):
-        """
-
-        :param var_list:
-        :param weights_decay:
-        :param name:
-        :return:
-        """
-        with tf.variable_scope(name_or_scope=name):
-            l2_reg_loss = tf.constant(0.0, tf.float32)
-            for vv in var_list:
-                if 'beta' in vv.name or 'gamma' in vv.name or 'b:0' in vv.name.split('/')[-1]:
-                    continue
-                else:
-                    l2_reg_loss = tf.add(l2_reg_loss, tf.nn.l2_loss(vv))
-            l2_reg_loss *= weights_decay
-            l2_reg_loss = tf.identity(l2_reg_loss, 'l2_loss')
-
-        return l2_reg_loss
 
     def build_detail_branch(self, input_tensor, name):
         """
@@ -1057,80 +960,88 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
             )
         return result
 
-    def compute_loss(self, input_tensor, label_tensor, name, reuse=False):
+    def build_instance_segmentation_branch(self, input_tensor, name):
         """
 
         :param input_tensor:
-        :param label_tensor:
         :param name:
-        :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
-            # build detail branch
-            detail_branch_output = self.build_detail_branch(
-                input_tensor=input_tensor,
-                name='detail_branch'
-            )
-            # build semantic branch
-            semantic_branch_output, semantic_branch_seg_logits = self.build_semantic_branch(
-                input_tensor=input_tensor,
-                name='semantic_branch',
-                prepare_data_for_booster=True
-            )
-            # build aggregation branch
-            aggregation_branch_output = self.build_aggregation_branch(
-                detail_output=detail_branch_output,
-                semantic_output=semantic_branch_output,
-                name='aggregation_branch'
-            )
-            # build segmentation head
-            segment_logits = self._seg_head_block(
-                input_tensor=aggregation_branch_output,
-                name='logits',
-                upsample_ratio=8,
-                feature_dims=self._seg_head_ratio * aggregation_branch_output.get_shape().as_list()[-1],
-                classes_nums=self._class_nums
-            )
-            semantic_branch_seg_logits['seg_head'] = segment_logits
-            # compute network loss
-            segment_loss = tf.constant(0.0, tf.float32)
-            for stage_name, seg_logits in semantic_branch_seg_logits.items():
-                loss_stage_name = '{:s}_segmentation_loss'.format(stage_name)
-                if self._loss_type == 'cross_entropy':
-                    if not self._enable_ohem:
-                        segment_loss += self._compute_cross_entropy_loss(
-                            seg_logits=seg_logits,
-                            labels=label_tensor,
-                            class_nums=self._class_nums,
-                            name=loss_stage_name
-                        )
-                    else:
-                        segment_loss += self._compute_ohem_cross_entropy_loss(
-                            seg_logits=seg_logits,
-                            labels=label_tensor,
-                            class_nums=self._class_nums,
-                            name=loss_stage_name,
-                            thresh=self._ohem_score_thresh,
-                            n_min=self._ohem_min_sample_nums
-                        )
-                else:
-                    raise NotImplementedError('Not supported loss of type: {:s}'.format(self._loss_type))
-            l2_reg_loss = self._compute_l2_reg_loss(
-                var_list=tf.trainable_variables(),
-                weights_decay=self._weights_decay,
-                name='segment_l2_loss'
-            )
-            total_loss = segment_loss + l2_reg_loss
-            total_loss = tf.identity(total_loss, name='total_loss')
+        input_tensor_size = input_tensor.get_shape().as_list()[1:3]
+        output_tensor_size = [int(tmp * 8) for tmp in input_tensor_size]
 
-            ret = {
-                'total_loss': total_loss,
-                'l2_loss': l2_reg_loss,
-            }
-        return ret
+        with tf.variable_scope(name_or_scope=name):
+            output_tensor = self._conv_block(
+                input_tensor=input_tensor,
+                k_size=3,
+                output_channels=64,
+                stride=1,
+                name='conv_3x3',
+                use_bias=False,
+                need_activate=True
+            )
+            output_tensor = self._conv_block(
+                input_tensor=output_tensor,
+                k_size=1,
+                output_channels=128,
+                stride=1,
+                name='conv_1x1',
+                use_bias=False,
+                need_activate=False
+            )
+            output_tensor = tf.image.resize_bilinear(
+                output_tensor,
+                output_tensor_size,
+                name='instance_logits'
+            )
+        return output_tensor
 
-    def inference(self, input_tensor, name, reuse=False):
+    def build_binary_segmentation_branch(self, input_tensor, name):
+        """
+
+        :param input_tensor:
+        :param name:
+        :return:
+        """
+        input_tensor_size = input_tensor.get_shape().as_list()[1:3]
+        output_tensor_size = [int(tmp * 8) for tmp in input_tensor_size]
+
+        with tf.variable_scope(name_or_scope=name):
+            output_tensor = self._conv_block(
+                input_tensor=input_tensor,
+                k_size=3,
+                output_channels=64,
+                stride=1,
+                name='conv_3x3',
+                use_bias=False,
+                need_activate=True
+            )
+            output_tensor = self._conv_block(
+                input_tensor=output_tensor,
+                k_size=1,
+                output_channels=128,
+                stride=1,
+                name='conv_1x1',
+                use_bias=False,
+                need_activate=True
+            )
+            output_tensor = self._conv_block(
+                input_tensor=output_tensor,
+                k_size=1,
+                output_channels=self._class_nums,
+                stride=1,
+                name='final_conv',
+                use_bias=False,
+                need_activate=False
+            )
+            output_tensor = tf.image.resize_bilinear(
+                output_tensor,
+                output_tensor_size,
+                name='binary_logits'
+            )
+        return output_tensor
+
+    def build_model(self, input_tensor, name, reuse=False):
         """
 
         :param input_tensor:
@@ -1156,179 +1067,34 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
                 semantic_output=semantic_branch_output,
                 name='aggregation_branch'
             )
-            # build segmentation head
-            segment_logits = self._seg_head_block(
+            # build binary and instance segmentation branch
+            binary_seg_branch_output = self.build_binary_segmentation_branch(
                 input_tensor=aggregation_branch_output,
-                name='logits',
-                upsample_ratio=8,
-                feature_dims=self._seg_head_ratio * aggregation_branch_output.get_shape().as_list()[-1],
-                classes_nums=self._class_nums
+                name='binary_segmentation_branch'
             )
-            segment_score = tf.nn.softmax(logits=segment_logits, name='prob')
-            segment_prediction = tf.argmax(segment_score, axis=-1, name='prediction')
-        return segment_prediction
+            instance_seg_branch_output = self.build_instance_segmentation_branch(
+                input_tensor=aggregation_branch_output,
+                name='instance_segmentation_branch'
+            )
+            # gather frontend output result
+            self._net_intermediate_results['binary_segment_logits'] = {
+                'data': binary_seg_branch_output,
+                'shape': binary_seg_branch_output.get_shape().as_list()
+            }
+            self._net_intermediate_results['instance_segment_logits'] = {
+                'data': instance_seg_branch_output,
+                'shape': instance_seg_branch_output.get_shape().as_list()
+            }
+        return self._net_intermediate_results
 
 
 if __name__ == '__main__':
     """
     test code
     """
-    import time
+    test_in_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
+    model = BiseNetV2(phase='train')
+    ret = model.build_model(test_in_tensor, name='bisenetv2')
+    for layer_name, layer_info in ret.items():
+        print('layer name: {:s} shape: {}'.format(layer_name, layer_info['shape']))
 
-    time_comsuming_loops = 5
-    test_input = tf.random.normal(shape=[1, 512, 1024, 3], dtype=tf.float32)
-    test_label = tf.random.uniform(shape=[1, 512, 1024], minval=0, maxval=6, dtype=tf.int32)
-
-    stem_block = _StemBlock(phase='train')
-    stem_block_output = stem_block(input_tensor=test_input, output_channels=16, name='test_stem_block')
-
-    context_embedding_block = _ContextEmbedding(phase='train')
-    context_embedding_block_output = context_embedding_block(
-        input_tensor=stem_block_output,
-        name='test_context_embedding_block'
-    )
-
-    ge_block = _GatherExpansion(phase='train')
-    ge_output_stride_1 = ge_block(
-        input_tensor=context_embedding_block_output,
-        name='test_ge_block_with_stride_1',
-        stride=1,
-        e=6
-    )
-    ge_output_stride_2 = ge_block(
-        input_tensor=ge_output_stride_1,
-        name='test_ge_block_with_stride_2',
-        stride=2,
-        e=6,
-        output_channels=128
-    )
-    ge_output_stride_2 = ge_block(
-        input_tensor=ge_output_stride_2,
-        name='test_ge_block_with_stride_2_repeat',
-        stride=2,
-        e=6,
-        output_channels=128
-    )
-
-    guided_aggregation_block = _GuidedAggregation(phase='train')
-    guided_aggregation_block_output = guided_aggregation_block(
-        detail_input_tensor=stem_block_output,
-        semantic_input_tensor=ge_output_stride_2,
-        name='test_guided_aggregation_block'
-    )
-
-    seg_head = _SegmentationHead(phase='train')
-    seg_head_output = seg_head(
-        input_tensor=stem_block_output,
-        name='test_seg_head_block',
-        upsample_ratio=4,
-        feature_dims=64,
-        classes_nums=9
-    )
-
-    bisenetv2 = BiseNetV2(phase='train')
-    bisenetv2_detail_branch_output = bisenetv2.build_detail_branch(
-        input_tensor=test_input,
-        name='detail_branch'
-    )
-    bisenetv2_semantic_branch_output, segment_head_inputs = bisenetv2.build_semantic_branch(
-        input_tensor=test_input,
-        name='semantic_branch'
-    )
-    bisenetv2_aggregation_output = bisenetv2.build_aggregation_branch(
-        detail_output=bisenetv2_detail_branch_output,
-        semantic_output=bisenetv2_semantic_branch_output,
-        name='aggregation_branch'
-    )
-    loss_set = bisenetv2.compute_loss(
-        input_tensor=test_input,
-        label_tensor=test_label,
-        name='BiseNetV2',
-        reuse=False
-    )
-    logits = bisenetv2.inference(
-        input_tensor=test_input,
-        name='BiseNetV2',
-        reuse=True
-    )
-
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        # stem block time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(stem_block_output)
-        print('Stem block module cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(stem_block_output)
-
-        # context embedding block time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(context_embedding_block_output)
-        print('Context embedding block module cost time: {:.5f}s'.format(
-            (time.time() - t_start) / time_comsuming_loops)
-        )
-        print(context_embedding_block_output)
-
-        # ge block with stride 1 time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(ge_output_stride_1)
-        print('Ge block with stride 1 module cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(ge_output_stride_1)
-
-        # ge block with stride 2 time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(ge_output_stride_2)
-        print('Ge block with stride 2 module cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(ge_output_stride_2)
-
-        # guided aggregation block time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(guided_aggregation_block_output)
-        print('Guided aggregation module cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(guided_aggregation_block_output)
-
-        # segmentation head block time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(seg_head_output)
-        print('Segmentation head module cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(seg_head_output)
-
-        # bisenetv2 detail branch time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(bisenetv2_detail_branch_output)
-        print('Bisenetv2 detail branch cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(bisenetv2_detail_branch_output)
-
-        # bisenetv2 semantic branch time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(bisenetv2_semantic_branch_output)
-        print('Bisenetv2 semantic branch cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(bisenetv2_semantic_branch_output)
-
-        # bisenetv2 aggregation branch time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(bisenetv2_aggregation_output)
-        print('Bisenetv2 aggregation branch cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(bisenetv2_aggregation_output)
-
-        # bisenetv2 compute loss time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(loss_set)
-        print('Bisenetv2 compute loss cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(loss_set)
-
-        # bisenetv2 inference time consuming
-        t_start = time.time()
-        for i in range(time_comsuming_loops):
-            sess.run(logits)
-        print('Bisenetv2 inference cost time: {:.5f}s'.format((time.time() - t_start) / time_comsuming_loops))
-        print(logits)
