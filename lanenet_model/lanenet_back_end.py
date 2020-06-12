@@ -10,11 +10,11 @@ LaneNet backend branch which is mainly used for binary and instance segmentation
 """
 import tensorflow as tf
 
-from config import global_config
+from local_utils.config_utils import parse_config_utils
 from lanenet_model import lanenet_discriminative_loss
 from semantic_segmentation_zoo import cnn_basenet
 
-CFG = global_config.cfg
+CFG = parse_config_utils.lanenet_cfg
 
 
 class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
@@ -29,6 +29,9 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         super(LaneNetBackEnd, self).__init__()
         self._phase = phase
         self._is_training = self._is_net_for_training()
+
+        self._class_nums = CFG.DATASET.NUM_CLASSES
+        self._embedding_dims = CFG.MODEL.EMBEDDING_FEATS_DIMS
 
     def _is_net_for_training(self):
         """
@@ -83,7 +86,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                         shape=[binary_label.get_shape().as_list()[0],
                                binary_label.get_shape().as_list()[1],
                                binary_label.get_shape().as_list()[2]]),
-                    depth=CFG.TRAIN.CLASSES_NUMS,
+                    depth=self._class_nums,
                     axis=-1
                 )
 
@@ -114,7 +117,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 pix_relu = self.relu(inputdata=pix_bn, name='pix_relu')
                 pix_embedding = self.conv2d(
                     inputdata=pix_relu,
-                    out_channel=CFG.TRAIN.EMBEDDING_FEATS_DIMS,
+                    out_channel=self._embedding_dims,
                     kernel_size=1,
                     use_bias=False,
                     name='pix_embedding_conv'
@@ -122,7 +125,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 pix_image_shape = (pix_embedding.get_shape().as_list()[1], pix_embedding.get_shape().as_list()[2])
                 instance_segmentation_loss, l_var, l_dist, l_reg = \
                     lanenet_discriminative_loss.discriminative_loss(
-                        pix_embedding, instance_label, CFG.TRAIN.EMBEDDING_FEATS_DIMS,
+                        pix_embedding, instance_label, self._embedding_dims,
                         pix_image_shape, 0.5, 3.0, 1.0, 1.0, 0.001
                     )
 
@@ -167,7 +170,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 pix_relu = self.relu(inputdata=pix_bn, name='pix_relu')
                 instance_seg_prediction = self.conv2d(
                     inputdata=pix_relu,
-                    out_channel=CFG.TRAIN.EMBEDDING_FEATS_DIMS,
+                    out_channel=self._embedding_dims,
                     kernel_size=1,
                     use_bias=False,
                     name='pix_embedding_conv'

@@ -10,46 +10,46 @@ Implement LaneNet Model
 """
 import tensorflow as tf
 
-from config import global_config
+from local_utils.config_utils import parse_config_utils
 from lanenet_model import lanenet_back_end
 from lanenet_model import lanenet_front_end
 from semantic_segmentation_zoo import cnn_basenet
 
-CFG = global_config.cfg
+CFG = parse_config_utils.lanenet_cfg
 
 
 class LaneNet(cnn_basenet.CNNBaseModel):
     """
 
     """
-    def __init__(self, phase, net_flag='vgg', reuse=False):
+    def __init__(self, phase):
         """
 
         """
         super(LaneNet, self).__init__()
-        self._net_flag = net_flag
-        self._reuse = reuse
+        self._net_flag = CFG.MODEL.FRONT_END
 
         self._frontend = lanenet_front_end.LaneNetFrondEnd(
-            phase=phase, net_flag=net_flag
+            phase=phase, net_flag=self._net_flag
         )
         self._backend = lanenet_back_end.LaneNetBackEnd(
             phase=phase
         )
 
-    def inference(self, input_tensor, name):
+    def inference(self, input_tensor, name, reuse=False):
         """
 
         :param input_tensor:
         :param name:
+        :param reuse
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=self._reuse):
+        with tf.variable_scope(name_or_scope=name, reuse=reuse):
             # first extract image features
             extract_feats_result = self._frontend.build_model(
                 input_tensor=input_tensor,
                 name='{:s}_frontend'.format(self._net_flag),
-                reuse=self._reuse
+                reuse=reuse
             )
 
             # second apply backend process
@@ -57,29 +57,27 @@ class LaneNet(cnn_basenet.CNNBaseModel):
                 binary_seg_logits=extract_feats_result['binary_segment_logits']['data'],
                 instance_seg_logits=extract_feats_result['instance_segment_logits']['data'],
                 name='{:s}_backend'.format(self._net_flag),
-                reuse=self._reuse
+                reuse=reuse
             )
-
-            if not self._reuse:
-                self._reuse = True
 
         return binary_seg_prediction, instance_seg_prediction
 
-    def compute_loss(self, input_tensor, binary_label, instance_label, name):
+    def compute_loss(self, input_tensor, binary_label, instance_label, name, reuse=False):
         """
         calculate lanenet loss for training
         :param input_tensor:
         :param binary_label:
         :param instance_label:
         :param name:
+        :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=self._reuse):
+        with tf.variable_scope(name_or_scope=name, reuse=reuse):
             # first extract image features
             extract_feats_result = self._frontend.build_model(
                 input_tensor=input_tensor,
                 name='{:s}_frontend'.format(self._net_flag),
-                reuse=self._reuse
+                reuse=reuse
             )
 
             # second apply backend process
@@ -89,10 +87,7 @@ class LaneNet(cnn_basenet.CNNBaseModel):
                 instance_seg_logits=extract_feats_result['instance_segment_logits']['data'],
                 instance_label=instance_label,
                 name='{:s}_backend'.format(self._net_flag),
-                reuse=self._reuse
+                reuse=reuse
             )
-
-            if not self._reuse:
-                self._reuse = True
 
         return calculated_losses

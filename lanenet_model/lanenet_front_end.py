@@ -10,6 +10,7 @@ LaneNet frontend branch which is mainly used for feature extraction
 """
 from semantic_segmentation_zoo import cnn_basenet
 from semantic_segmentation_zoo import vgg16_based_fcn
+from semantic_segmentation_zoo import bisenet_v2
 
 
 class LaneNetFrondEnd(cnn_basenet.CNNBaseModel):
@@ -23,7 +24,8 @@ class LaneNetFrondEnd(cnn_basenet.CNNBaseModel):
         super(LaneNetFrondEnd, self).__init__()
 
         self._frontend_net_map = {
-            'vgg': vgg16_based_fcn.VGG16FCN(phase=phase)
+            'vgg': vgg16_based_fcn.VGG16FCN(phase=phase),
+            'bisenetv2': bisenet_v2.BiseNetV2(phase=phase),
         }
 
         self._net = self._frontend_net_map[net_flag]

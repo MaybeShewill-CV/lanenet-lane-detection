@@ -17,9 +17,9 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
-from config import global_config
+from local_utils.config_utils import parse_config_utils
 
-CFG = global_config.cfg
+CFG = parse_config_utils.lanenet_cfg
 
 
 def _morphological_process(image, kernel_size=5):
