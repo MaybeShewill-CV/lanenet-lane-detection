@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Time    : 2020/6/12 下午1:33
-# @Author  : LuoYao
-# @Site    : ICode
+# @Author  : MaybeShewill-CV
+# @Site    : https://github.com/MaybeShewill-CV/lanenet-lane-detection
 # @File    : tusimple_lanenet_single_gpu_trainner.py
 # @IDE: PyCharm
 """
