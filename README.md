@@ -202,6 +202,7 @@ The lanenet project refers to the following projects:
 
 - [MNN](https://github.com/alibaba/MNN)
 - [SimpleDBSCAN](https://github.com/CallmeNezha/SimpleDBSCAN)
+- [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)
 
 ## Contact
 
