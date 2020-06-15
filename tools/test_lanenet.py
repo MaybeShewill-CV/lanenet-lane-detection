@@ -13,16 +13,17 @@ import os.path as ops
 import time
 
 import cv2
-import glog as log
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from config import global_config
 from lanenet_model import lanenet
 from lanenet_model import lanenet_postprocess
+from local_utils.config_utils import parse_config_utils
+from local_utils.log_util import init_logger
 
-CFG = global_config.cfg
+CFG = parse_config_utils.lanenet_cfg
+LOG = init_logger.get_logger(log_file_name_prefix='lanenet_test')
 
 
 def init_args():
@@ -75,18 +76,18 @@ def test_lanenet(image_path, weights_path):
     """
     assert ops.exists(image_path), '{:s} not exist'.format(image_path)
 
-    log.info('Start reading image and preprocessing')
+    LOG.info('Start reading image and preprocessing')
     t_start = time.time()
     image = cv2.imread(image_path, cv2.IMREAD_COLOR)
     image_vis = image
     image = cv2.resize(image, (512, 256), interpolation=cv2.INTER_LINEAR)
     image = image / 127.5 - 1.0
-    log.info('Image load complete, cost time: {:.5f}s'.format(time.time() - t_start))
+    LOG.info('Image load complete, cost time: {:.5f}s'.format(time.time() - t_start))
 
     input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
 
-    net = lanenet.LaneNet(phase='test', net_flag='vgg')
-    binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='lanenet_model')
+    net = lanenet.LaneNet(phase='test')
+    binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
 
     postprocessor = lanenet_postprocess.LaneNetPostProcessor()
 
@@ -94,8 +95,8 @@ def test_lanenet(image_path, weights_path):
 
     # Set sess configuration
     sess_config = tf.ConfigProto()
-    sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.TEST.GPU_MEMORY_FRACTION
-    sess_config.gpu_options.allow_growth = CFG.TRAIN.TF_ALLOW_GROWTH
+    sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.GPU.GPU_MEMORY_FRACTION
+    sess_config.gpu_options.allow_growth = CFG.GPU.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
 
     sess = tf.Session(config=sess_config)
@@ -105,12 +106,15 @@ def test_lanenet(image_path, weights_path):
         saver.restore(sess=sess, save_path=weights_path)
 
         t_start = time.time()
-        binary_seg_image, instance_seg_image = sess.run(
-            [binary_seg_ret, instance_seg_ret],
-            feed_dict={input_tensor: [image]}
-        )
+        loop_times = 500
+        for i in range(loop_times):
+            binary_seg_image, instance_seg_image = sess.run(
+                [binary_seg_ret, instance_seg_ret],
+                feed_dict={input_tensor: [image]}
+            )
         t_cost = time.time() - t_start
-        log.info('Single imgae inference cost time: {:.5f}s'.format(t_cost))
+        t_cost /= loop_times
+        LOG.info('Single imgae inference cost time: {:.5f}s'.format(t_cost))
 
         postprocess_result = postprocessor.postprocess(
             binary_seg_result=binary_seg_image[0],
@@ -119,7 +123,7 @@ def test_lanenet(image_path, weights_path):
         )
         mask_image = postprocess_result['mask_image']
 
-        for i in range(CFG.TRAIN.EMBEDDING_FEATS_DIMS):
+        for i in range(CFG.MODEL.EMBEDDING_FEATS_DIMS):
             instance_seg_image[0][:, :, i] = minmax_scale(instance_seg_image[0][:, :, i])
         embedding_image = np.array(instance_seg_image[0], np.uint8)
 
@@ -132,10 +136,6 @@ def test_lanenet(image_path, weights_path):
         plt.figure('binary_image')
         plt.imshow(binary_seg_image[0] * 255, cmap='gray')
         plt.show()
-
-        cv2.imwrite('instance_mask_image.png', mask_image)
-        cv2.imwrite('source_image.png', postprocess_result['source_image'])
-        cv2.imwrite('binary_mask_image.png', binary_seg_image[0] * 255)
 
     sess.close()
 
