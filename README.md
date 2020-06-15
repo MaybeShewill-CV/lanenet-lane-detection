@@ -81,9 +81,7 @@ All your training image will be scaled into the same scale according to the conf
 Use the script here to generate the tensorflow records file
 
 ```
-python data_provider/lanenet_data_feed_pipline.py 
---dataset_dir ./data/training_data_example
---tfrecords_dir ./data/training_data_example/tfrecords
+python tools/make_tusimple_tfrecords.py 
 ```
 
 #### Train model
@@ -95,18 +93,7 @@ script to load your own pretrained parameters or you can implement your own base
 You may call the following script to train your own model
 
 ```
-python tools/train_lanenet.py 
---net vgg 
---dataset_dir ./data/training_data_example
--m 0
-```
-You can also continue the training process from the snapshot by
-```
-python tools/train_lanenet.py 
---net vgg 
---dataset_dir data/training_data_example/ 
---weights_path path/to/your/last/checkpoint
--m 0
+python tools/train_lanenet_tusimple.py 
 ```
 
 You may monitor the training process using tensorboard tools
@@ -170,6 +157,15 @@ script on your own.
 ## Recently updates 2019.05.16
 
 New model weights can be found [here](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0)
+
+## Recently updates 2020.06.12
+
+Add real-time segmentation model BiseNetV2 as lanenet backbone. You may modify the
+config/tusimple_lanenet.yaml config file to choose the front-end of lanenet model.
+
+New lanenet model trainned based on BiseNetV2 can be found [here](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0)
+
+The new model can reach 78 fps in single image inference process.
 
 ## MNN Project
 

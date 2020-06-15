@@ -20,7 +20,7 @@ def generate_tfrecords():
     :return:
     """
     producer = lanenet_data_feed_pipline.LaneNetDataProducer()
-    producer.generate_tfrecords(step_size=1000)
+    producer.generate_tfrecords()
 
     return
 
