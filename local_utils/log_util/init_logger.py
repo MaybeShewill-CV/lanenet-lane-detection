@@ -46,8 +46,3 @@ def get_logger(log_file_name_prefix):
     )
 
     return logger
-
-
-INIT_LOG = get_logger(
-    log_file_name_prefix='lanenet_train'
-)
