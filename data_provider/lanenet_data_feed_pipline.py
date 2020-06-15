@@ -300,12 +300,12 @@ class LaneNetDataFeeder(object):
                     num_parallel_calls=CFG.DATASET.CPU_MULTI_PROCESS_NUMS
                 )
 
-                dataset = dataset.shuffle(buffer_size=1024)
+                dataset = dataset.shuffle(buffer_size=512)
                 # repeat num epochs
                 dataset = dataset.repeat(self._epoch_nums)
 
                 dataset = dataset.batch(batch_size=batch_size, drop_remainder=True)
-                dataset = dataset.prefetch(buffer_size=batch_size * 16)
+                dataset = dataset.prefetch(buffer_size=128)
 
                 iterator = dataset.make_one_shot_iterator()
 

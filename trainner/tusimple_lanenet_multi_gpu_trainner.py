@@ -204,12 +204,10 @@ class LaneNetTusimpleMultiTrainer(object):
             name='LaneNet',
             reuse=True
         )
-        self._binary_prediciton = tf.nn.softmax(logits=self._binary_prediciton)
-        self._binary_prediction = tf.argmax(self._binary_prediciton, axis=-1)
         self._binary_prediciton = tf.identity(self._binary_prediciton, name='binary_segmentation_result')
         self._val_binary_prediction, self._val_instance_prediciton = self._val_model.inference(
             input_tensor=self._val_input_src_image,
-            name='BiseNetV2',
+            name='LaneNet',
             reuse=True
         )
         self._val_binary_prediction = tf.identity(self._val_binary_prediction, name='val_binary_segmentation_result')
@@ -406,11 +404,13 @@ class LaneNetTusimpleMultiTrainer(object):
             traindataset_pbar = tqdm.tqdm(range(1, self._steps_per_epoch))
             for _ in traindataset_pbar:
                 if self._enable_miou and epoch % self._record_miou_epoch == 0:
-                    _, _, summary, train_step_loss, global_step_val = self._sess.run(
-                        fetches=[
-                            self._train_op, self._miou_update_op, self._write_summary_op_with_miou,
-                            self._loss, self._global_step
-                        ]
+                    _, _, summary, train_step_loss, train_step_binary_loss, \
+                        train_step_instance_loss, global_step_val = self._sess.run(
+                            fetches=[
+                                self._train_op, self._miou_update_op, self._write_summary_op_with_miou,
+                                self._loss, self._binary_loss, self._instance_loss,
+                                self._global_step
+                            ]
                     )
                     train_step_miou = self._sess.run(
                         fetches=self._miou
@@ -419,19 +419,25 @@ class LaneNetTusimpleMultiTrainer(object):
                     train_epoch_mious.append(train_step_miou)
                     self._summary_writer.add_summary(summary, global_step=global_step_val)
                     traindataset_pbar.set_description(
-                        'train loss: {:.5f}, miou: {:.5f}'.format(train_step_loss, train_step_miou)
+                        'train loss: {:.5f}, b_loss: {:.5f}, i_loss: {:.5f}, miou: {:.5f}'.format(
+                            train_step_loss, train_step_binary_loss, train_step_instance_loss, train_step_miou
+                        )
                     )
                 else:
-                    _, summary, train_step_loss, global_step_val = self._sess.run(
-                        fetches=[
-                            self._train_op, self._write_summary_op,
-                            self._loss, self._global_step
-                        ]
+                    _, summary, train_step_loss, train_step_binary_loss, \
+                        train_step_instance_loss, global_step_val = self._sess.run(
+                            fetches=[
+                                self._train_op, self._write_summary_op,
+                                self._loss, self._binary_loss, self._instance_loss,
+                                self._global_step
+                            ]
                     )
                     train_epoch_losses.append(train_step_loss)
                     self._summary_writer.add_summary(summary, global_step=global_step_val)
                     traindataset_pbar.set_description(
-                        'train loss: {:.5f}'.format(train_step_loss)
+                        'train loss: {:.5f}, b_loss: {:.5f}, i_loss: {:.5f}'.format(
+                            train_step_loss, train_step_binary_loss, train_step_instance_loss
+                        )
                     )
 
             train_epoch_losses = np.mean(train_epoch_losses)
@@ -445,12 +451,14 @@ class LaneNetTusimpleMultiTrainer(object):
             for _ in valdataset_pbar:
                 try:
                     if self._enable_miou and epoch % self._record_miou_epoch == 0:
-                        _, val_summary, val_step_loss, val_global_step_val = self._sess.run(
-                            fetches=[
-                                self._val_miou_update_op, self._val_write_summary_op_with_miou,
-                                self._val_loss, self._val_global_step
-                            ]
-                        )
+                        _, val_summary, val_step_loss, val_step_binary_loss, \
+                            val_step_instance_loss, val_global_step_val = self._sess.run(
+                                    fetches=[
+                                        self._val_miou_update_op, self._val_write_summary_op_with_miou,
+                                        self._val_loss, self._val_binary_loss, self._val_instance_loss,
+                                        self._val_global_step
+                                    ]
+                            )
                         val_step_miou = self._sess.run(
                             fetches=self._val_miou
                         )
@@ -458,19 +466,24 @@ class LaneNetTusimpleMultiTrainer(object):
                         val_epoch_mious.append(val_step_miou)
                         self._summary_writer.add_summary(val_summary, global_step=val_global_step_val)
                         valdataset_pbar.set_description(
-                            'val loss: {:.5f}, val miou: {:.5f}'.format(val_step_loss, val_step_miou)
+                            'val loss: {:.5f}, b_loss: {:.5f}, i_loss: {:.5f}, val miou: {:.5f}'.format(
+                                val_step_loss, val_step_binary_loss, val_step_instance_loss, val_step_miou)
                         )
                     else:
-                        val_summary, val_step_loss, val_global_step_val = self._sess.run(
-                            fetches=[
-                                self._val_write_summary_op,
-                                self._val_loss, self._val_global_step
-                            ]
-                        )
+                        val_summary, val_step_loss, val_step_binary_loss, \
+                            val_step_instance_loss, val_global_step_val = self._sess.run(
+                                fetches=[
+                                    self._val_write_summary_op,
+                                    self._val_loss, self._val_binary_loss, self._val_instance_loss,
+                                    self._val_global_step
+                                ]
+                            )
                         val_epoch_losses.append(val_step_loss)
                         self._summary_writer.add_summary(val_summary, global_step=val_global_step_val)
                         valdataset_pbar.set_description(
-                            'val loss: {:.5f}'.format(val_step_loss)
+                            'val loss: {:.5f} b_loss: {:.5f}, i_loss: {:.5f}'.format(
+                                val_step_loss, val_step_binary_loss, val_step_instance_loss
+                            )
                         )
                 except tf.errors.OutOfRangeError as _:
                     break
