@@ -91,8 +91,6 @@ def test_lanenet(image_path, weights_path):
 
     postprocessor = lanenet_postprocess.LaneNetPostProcessor()
 
-    saver = tf.train.Saver()
-
     # Set sess configuration
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.GPU.GPU_MEMORY_FRACTION
@@ -101,8 +99,16 @@ def test_lanenet(image_path, weights_path):
 
     sess = tf.Session(config=sess_config)
 
-    with sess.as_default():
+    # define moving average version of the learned variables for eval
+    with tf.variable_scope(name_or_scope='moving_avg'):
+        variable_averages = tf.train.ExponentialMovingAverage(
+            CFG.SOLVER.MOVING_AVE_DECAY)
+        variables_to_restore = variable_averages.variables_to_restore()
 
+    # define saver
+    saver = tf.train.Saver(variables_to_restore)
+
+    with sess.as_default():
         saver.restore(sess=sess, save_path=weights_path)
 
         t_start = time.time()
