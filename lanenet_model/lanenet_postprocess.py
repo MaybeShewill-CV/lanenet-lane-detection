@@ -349,9 +349,6 @@ class LaneNetPostProcessor(object):
             if data_source == 'tusimple':
                 tmp_mask = np.zeros(shape=(720, 1280), dtype=np.uint8)
                 tmp_mask[tuple((np.int_(coords[:, 1] * 720 / 256), np.int_(coords[:, 0] * 1280 / 512)))] = 255
-            elif data_source == 'beec_ccd':
-                tmp_mask = np.zeros(shape=(1350, 2448), dtype=np.uint8)
-                tmp_mask[tuple((np.int_(coords[:, 1] * 1350 / 256), np.int_(coords[:, 0] * 2448 / 512)))] = 255
             else:
                 raise ValueError('Wrong data source now only support tusimple and beec_ccd')
             tmp_ipm_mask = cv2.remap(
