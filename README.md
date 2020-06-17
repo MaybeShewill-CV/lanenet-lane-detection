@@ -30,7 +30,7 @@ download the model and put them in folder model/tusimple_lanenet_vgg/
 You can test a single image on the trained model as follows
 
 ```
-python tools/test_lanenet.py --weights_path ./model/tusimple_lanenet_vgg/tusimple_lanenet_vgg.ckpt 
+python tools/test_lanenet.py --weights_path /PATH/TO/YOUT/CKPT_FILE_PATH 
 --image_path ./data/tusimple_test_image/0.jpg
 ```
 The results are as follows:
@@ -55,7 +55,7 @@ If you want to evaluate the model on the whole tusimple test dataset you may cal
 ```
 python tools/evaluate_lanenet_on_tusimple.py 
 --image_dir ROOT_DIR/TUSIMPLE_DATASET/test_set/clips 
---weights_path ./model/tusimple_lanenet_vgg/tusimple_lanenet_vgg.ckpt 
+--weights_path /PATH/TO/YOUT/CKPT_FILE_PATH 
 --save_dir ROOT_DIR/TUSIMPLE_DATASET/test_set/test_output
 ```
 If you set the save_dir argument the result will be saved in that folder 
