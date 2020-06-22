@@ -11,8 +11,8 @@ The main network architecture is as follows:
 
 ## Installation
 This software has only been tested on ubuntu 16.04(x64), python3.5, cuda-9.0, cudnn-7.0 with a GTX-1070 GPU. 
-To install this software you need tensorflow 1.10.0 and other version of tensorflow has not been tested but I think 
-it will be able to work properly in tensorflow above version 1.10. Other required package you may install them by
+To install this software you need tensorflow 1.12.0 and other version of tensorflow has not been tested but I think 
+it will be able to work properly in tensorflow above version 1.12. Other required package you may install them by
 
 ```
 pip3 install -r requirements.txt
