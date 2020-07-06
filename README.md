@@ -121,17 +121,6 @@ SGD optimizer will lead to more stable training process and will not
 easily stuck into nan loss which may often happen when using the origin
 code.
 
-I have uploaded a new lanenet model trained on tusimple dataset using the
-new code here [new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0).
-You may download the new model weights and update the new code. To update
-the new code you just need to
-
-```
-git pull origin master
-```
-The rest are just the same as which mentioned above. And recently I will 
-release a new model trained on culane dataset.
-
 ## Recently updates 2018.12.13
 Since a lot of user want a automatic tools to generate the training samples
 from the Tusimple Dataset. I upload the tools I use to generate the training
@@ -153,10 +142,6 @@ Pay attention that the script only process the training samples and you
 need to select several lines from the train.txt to generate your own 
 val.txt file. In order to obtain the test images you can modify the 
 script on your own.
-
-## Recently updates 2019.05.16
-
-New model weights can be found [here](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0)
 
 ## Recently updates 2020.06.12
 
