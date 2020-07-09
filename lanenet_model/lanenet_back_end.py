@@ -64,6 +64,25 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
 
         return loss
 
+    #ref https://blog.csdn.net/u011583927/article/details/90716942
+    def _multi_category_focal_loss(self, onehot_labels, logits, classes_weights, gamma=2.0):
+        """
+        focal loss for multi category of multi label problem
+        """
+        epsilon = 1.e-7
+        alpha = tf.multiply(onehot_labels, classes_weights)
+        alpha = tf.cast(alpha, tf.float32)
+        gamma = float(gamma)
+        y_true = tf.cast(onehot_labels, tf.float32)
+        y_pred = tf.nn.softmax(logits, dim=-1)
+        y_pred = tf.clip_by_value(y_pred, epsilon, 1. - epsilon)
+        y_t = tf.multiply(y_true, y_pred) + tf.multiply(1-y_true, 1-y_pred)
+        ce = -tf.log(y_t)
+        weight = tf.pow(tf.subtract(1., y_t), gamma)
+        fl = tf.multiply(tf.multiply(weight, ce), alpha)
+        loss = tf.reduce_mean(fl)
+        return loss
+
     def compute_loss(self, binary_seg_logits, binary_label,
                      instance_seg_logits, instance_label,
                      name, reuse):
@@ -108,6 +127,12 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     logits=binary_seg_logits,
                     classes_weights=inverse_weights
                 )
+                '''
+                binary_segmenatation_loss = self._multi_category_focal_loss(
+                    onehot_labels=binary_label_onehot,
+                    logits=binary_seg_logits,
+                    classes_weights=inverse_weights
+                )'''
 
             # calculate class weighted instance seg loss
             with tf.variable_scope(name_or_scope='instance_seg'):
