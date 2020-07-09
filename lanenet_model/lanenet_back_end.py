@@ -136,9 +136,9 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     )
                 elif self._binary_loss_type == 'focal':
                     binary_segmenatation_loss = self._multi_category_focal_loss(
-                    onehot_labels=binary_label_onehot,
-                    logits=binary_seg_logits,
-                    classes_weights=inverse_weights
+                        onehot_labels=binary_label_onehot,
+                        logits=binary_seg_logits,
+                        classes_weights=inverse_weights
                     )
                 else:
                     raise NotImplementedError
