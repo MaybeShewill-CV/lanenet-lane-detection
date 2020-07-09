@@ -32,6 +32,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
 
         self._class_nums = CFG.DATASET.NUM_CLASSES
         self._embedding_dims = CFG.MODEL.EMBEDDING_FEATS_DIMS
+        self._binary_loss_type = CFG.SOLVER.LOSS_TYPE
 
     def _is_net_for_training(self):
         """
@@ -63,6 +64,18 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         )
 
         return loss
+
+    @classmethod
+    def _multi_category_focal_loss(cls, onehot_labels, logits, classes_weights, gamma=2.0):
+        """
+
+        :param onehot_labels:
+        :param logits:
+        :param classes_weights:
+        :param gamma:
+        :return:
+        """
+        raise NotImplementedError('Func has not been implemented')
 
     def compute_loss(self, binary_seg_logits, binary_label,
                      instance_seg_logits, instance_label,
@@ -102,12 +115,16 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     1.0,
                     tf.log(tf.add(tf.divide(counts, tf.reduce_sum(counts)), tf.constant(1.02)))
                 )
-
-                binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
-                    onehot_labels=binary_label_onehot,
-                    logits=binary_seg_logits,
-                    classes_weights=inverse_weights
-                )
+                if self._binary_loss_type == 'cross_entropy':
+                    binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
+                        onehot_labels=binary_label_onehot,
+                        logits=binary_seg_logits,
+                        classes_weights=inverse_weights
+                    )
+                elif self._binary_loss_type == 'focal':
+                    raise NotImplementedError
+                else:
+                    raise NotImplementedError
 
             # calculate class weighted instance seg loss
             with tf.variable_scope(name_or_scope='instance_seg'):
