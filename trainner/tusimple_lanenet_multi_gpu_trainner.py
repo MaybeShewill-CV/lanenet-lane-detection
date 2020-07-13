@@ -192,6 +192,8 @@ class LaneNetTusimpleMultiTrainer(object):
             moving_ave_op = tf.train.ExponentialMovingAverage(self._moving_ave_decay).apply(
                 train_var_list + tf.moving_average_variables()
             )
+            # define saver
+            self._loader = tf.train.Saver(tf.moving_average_variables())
 
         # group all the op needed for training
         batchnorm_updates_op = tf.group(*batchnorm_updates)
@@ -240,7 +242,6 @@ class LaneNetTusimpleMultiTrainer(object):
         # define saver and loader
         with tf.variable_scope('loader_and_saver'):
             self._net_var = [vv for vv in tf.global_variables() if 'lr' not in vv.name]
-            self._loader = tf.train.Saver(self._net_var)
             self._saver = tf.train.Saver(max_to_keep=10)
 
         # define summary
