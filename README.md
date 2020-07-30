@@ -24,8 +24,8 @@ The deep neural network inference part can achieve around a 50fps which is simil
 the input pipeline I implemented now need to be improved to achieve a real time lane detection system.
 
 The trained lanenet model weights files are stored in 
-[new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0). You can 
-download the model and put them in folder model/tusimple_lanenet_vgg/
+[lanenet_pretrained_model](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0). You can 
+download the model and put them in folder model/tusimple_lanenet/
 
 You can test a single image on the trained model as follows
 
