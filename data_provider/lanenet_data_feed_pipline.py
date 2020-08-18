@@ -46,7 +46,7 @@ class LaneNetDataProducer(object):
 
         if not self._is_source_data_complete():
             raise ValueError('Source image data is not complete, '
-                             'please check if one of the image folder is not exist')
+                             'please check if one of the image folder does not exist')
 
         if not self._is_training_sample_index_file_complete():
             self._generate_training_example_index_file()
