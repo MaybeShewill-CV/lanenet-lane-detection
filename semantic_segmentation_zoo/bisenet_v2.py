@@ -15,8 +15,6 @@ import tensorflow as tf
 from semantic_segmentation_zoo import cnn_basenet
 from local_utils.config_utils import parse_config_utils
 
-CFG = parse_config_utils.lanenet_cfg
-
 
 class _StemBlock(cnn_basenet.CNNBaseModel):
     """
@@ -723,25 +721,26 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
     """
     implementation of bisenet v2
     """
-    def __init__(self, phase):
+    def __init__(self, phase, cfg):
         """
 
         """
         super(BiseNetV2, self).__init__()
+        self._cfg = cfg
         self._phase = phase
         self._is_training = self._is_net_for_training()
 
         # set model hyper params
-        self._class_nums = CFG.DATASET.NUM_CLASSES
-        self._weights_decay = CFG.SOLVER.WEIGHT_DECAY
-        self._loss_type = CFG.SOLVER.LOSS_TYPE
-        self._enable_ohem = CFG.SOLVER.OHEM.ENABLE
+        self._class_nums = self._cfg.DATASET.NUM_CLASSES
+        self._weights_decay = self._cfg.SOLVER.WEIGHT_DECAY
+        self._loss_type = self._cfg.SOLVER.LOSS_TYPE
+        self._enable_ohem = self._cfg.SOLVER.OHEM.ENABLE
         if self._enable_ohem:
-            self._ohem_score_thresh = CFG.SOLVER.OHEM.SCORE_THRESH
-            self._ohem_min_sample_nums = CFG.SOLVER.OHEM.MIN_SAMPLE_NUMS
-        self._ge_expand_ratio = CFG.MODEL.BISENETV2.GE_EXPAND_RATIO
-        self._semantic_channel_ratio = CFG.MODEL.BISENETV2.SEMANTIC_CHANNEL_LAMBDA
-        self._seg_head_ratio = CFG.MODEL.BISENETV2.SEGHEAD_CHANNEL_EXPAND_RATIO
+            self._ohem_score_thresh = self._cfg.SOLVER.OHEM.SCORE_THRESH
+            self._ohem_min_sample_nums = self._cfg.SOLVER.OHEM.MIN_SAMPLE_NUMS
+        self._ge_expand_ratio = self._cfg.MODEL.BISENETV2.GE_EXPAND_RATIO
+        self._semantic_channel_ratio = self._cfg.MODEL.BISENETV2.SEMANTIC_CHANNEL_LAMBDA
+        self._seg_head_ratio = self._cfg.MODEL.BISENETV2.SEGHEAD_CHANNEL_EXPAND_RATIO
 
         # set module used in bisenetv2
         self._se_block = _StemBlock(phase=phase)
@@ -1093,7 +1092,7 @@ if __name__ == '__main__':
     test code
     """
     test_in_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
-    model = BiseNetV2(phase='train')
+    model = BiseNetV2(phase='train', cfg=parse_config_utils.lanenet_cfg)
     ret = model.build_model(test_in_tensor, name='bisenetv2')
     for layer_name, layer_info in ret.items():
         print('layer name: {:s} shape: {}'.format(layer_name, layer_info['shape']))

@@ -10,24 +10,22 @@ Implement LaneNet Model
 """
 import tensorflow as tf
 
-from local_utils.config_utils import parse_config_utils
 from lanenet_model import lanenet_back_end
 from lanenet_model import lanenet_front_end
 from semantic_segmentation_zoo import cnn_basenet
-
-CFG = parse_config_utils.lanenet_cfg
 
 
 class LaneNet(cnn_basenet.CNNBaseModel):
     """
 
     """
-    def __init__(self, phase):
+    def __init__(self, phase, cfg):
         """
 
         """
         super(LaneNet, self).__init__()
-        self._net_flag = CFG.MODEL.FRONT_END
+        self._cfg = cfg
+        self._net_flag = self._cfg.MODEL.FRONT_END
 
         self._frontend = lanenet_front_end.LaneNetFrondEnd(
             phase=phase, net_flag=self._net_flag

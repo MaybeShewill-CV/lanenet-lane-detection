@@ -20,10 +20,8 @@ import loguru
 import tqdm
 
 from data_provider import lanenet_data_feed_pipline
-from local_utils.config_utils import parse_config_utils
 from lanenet_model import lanenet
 
-CFG = parse_config_utils.lanenet_cfg
 LOG = loguru.logger
 
 
@@ -32,46 +30,47 @@ class LaneNetTusimpleTrainer(object):
     init lanenet single gpu trainner
     """
 
-    def __init__(self):
+    def __init__(self, cfg):
         """
         initialize lanenet trainner
         """
+        self._cfg = cfg
         # define solver params and dataset
         self._train_dataset = lanenet_data_feed_pipline.LaneNetDataFeeder(flags='train')
         self._steps_per_epoch = len(self._train_dataset)
 
-        self._model_name = '{:s}_{:s}'.format(CFG.MODEL.FRONT_END, CFG.MODEL.MODEL_NAME)
+        self._model_name = '{:s}_{:s}'.format(self._cfg.MODEL.FRONT_END, self._cfg.MODEL.MODEL_NAME)
 
-        self._train_epoch_nums = CFG.TRAIN.EPOCH_NUMS
-        self._batch_size = CFG.TRAIN.BATCH_SIZE
-        self._snapshot_epoch = CFG.TRAIN.SNAPSHOT_EPOCH
-        self._model_save_dir = ops.join(CFG.TRAIN.MODEL_SAVE_DIR, self._model_name)
-        self._tboard_save_dir = ops.join(CFG.TRAIN.TBOARD_SAVE_DIR, self._model_name)
-        self._enable_miou = CFG.TRAIN.COMPUTE_MIOU.ENABLE
+        self._train_epoch_nums = self._cfg.TRAIN.EPOCH_NUMS
+        self._batch_size = self._cfg.TRAIN.BATCH_SIZE
+        self._snapshot_epoch = self._cfg.TRAIN.SNAPSHOT_EPOCH
+        self._model_save_dir = ops.join(self._cfg.TRAIN.MODEL_SAVE_DIR, self._model_name)
+        self._tboard_save_dir = ops.join(self._cfg.TRAIN.TBOARD_SAVE_DIR, self._model_name)
+        self._enable_miou = self._cfg.TRAIN.COMPUTE_MIOU.ENABLE
         if self._enable_miou:
-            self._record_miou_epoch = CFG.TRAIN.COMPUTE_MIOU.EPOCH
-        self._input_tensor_size = [int(tmp) for tmp in CFG.AUG.TRAIN_CROP_SIZE]
+            self._record_miou_epoch = self._cfg.TRAIN.COMPUTE_MIOU.EPOCH
+        self._input_tensor_size = [int(tmp) for tmp in self._cfg.AUG.TRAIN_CROP_SIZE]
 
-        self._init_learning_rate = CFG.SOLVER.LR
-        self._moving_ave_decay = CFG.SOLVER.MOVING_AVE_DECAY
-        self._momentum = CFG.SOLVER.MOMENTUM
-        self._lr_polynimal_decay_power = CFG.SOLVER.LR_POLYNOMIAL_POWER
-        self._optimizer_mode = CFG.SOLVER.OPTIMIZER.lower()
+        self._init_learning_rate = self._cfg.SOLVER.LR
+        self._moving_ave_decay = self._cfg.SOLVER.MOVING_AVE_DECAY
+        self._momentum = self._cfg.SOLVER.MOMENTUM
+        self._lr_polynimal_decay_power = self._cfg.SOLVER.LR_POLYNOMIAL_POWER
+        self._optimizer_mode = self._cfg.SOLVER.OPTIMIZER.lower()
 
-        if CFG.TRAIN.RESTORE_FROM_SNAPSHOT.ENABLE:
-            self._initial_weight = CFG.TRAIN.RESTORE_FROM_SNAPSHOT.SNAPSHOT_PATH
+        if self._cfg.TRAIN.RESTORE_FROM_SNAPSHOT.ENABLE:
+            self._initial_weight = self._cfg.TRAIN.RESTORE_FROM_SNAPSHOT.SNAPSHOT_PATH
         else:
             self._initial_weight = None
-        if CFG.TRAIN.WARM_UP.ENABLE:
-            self._warmup_epoches = CFG.TRAIN.WARM_UP.EPOCH_NUMS
+        if self._cfg.TRAIN.WARM_UP.ENABLE:
+            self._warmup_epoches = self._cfg.TRAIN.WARM_UP.EPOCH_NUMS
             self._warmup_init_learning_rate = self._init_learning_rate / 1000.0
         else:
             self._warmup_epoches = 0
 
         # define tensorflow session
         sess_config = tf.ConfigProto(allow_soft_placement=True)
-        sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.GPU.GPU_MEMORY_FRACTION
-        sess_config.gpu_options.allow_growth = CFG.GPU.TF_ALLOW_GROWTH
+        sess_config.gpu_options.per_process_gpu_memory_fraction = self._cfg.GPU.GPU_MEMORY_FRACTION
+        sess_config.gpu_options.allow_growth = self._cfg.GPU.TF_ALLOW_GROWTH
         sess_config.gpu_options.allocator_type = 'BFC'
         self._sess = tf.Session(config=sess_config)
 
@@ -81,7 +80,7 @@ class LaneNetTusimpleTrainer(object):
                 self._train_dataset.next_batch(batch_size=self._batch_size)
 
         # define model loss
-        self._model = lanenet.LaneNet(phase='train')
+        self._model = lanenet.LaneNet(phase='train', cfg=self._cfg)
         loss_set = self._model.compute_loss(
             input_tensor=self._input_src_image,
             binary_label=self._input_binary_label_image,
@@ -106,13 +105,13 @@ class LaneNetTusimpleTrainer(object):
             with tf.variable_scope('miou'):
                 pred = tf.reshape(self._binary_prediciton, [-1, ])
                 gt = tf.reshape(self._input_binary_label_image, [-1, ])
-                indices = tf.squeeze(tf.where(tf.less_equal(gt, CFG.DATASET.NUM_CLASSES - 1)), 1)
+                indices = tf.squeeze(tf.where(tf.less_equal(gt, self._cfg.DATASET.NUM_CLASSES - 1)), 1)
                 gt = tf.gather(gt, indices)
                 pred = tf.gather(pred, indices)
                 self._miou, self._miou_update_op = tf.metrics.mean_iou(
                     labels=gt,
                     predictions=pred,
-                    num_classes=CFG.DATASET.NUM_CLASSES
+                    num_classes=self._cfg.DATASET.NUM_CLASSES
                 )
 
         # define learning rate
@@ -139,7 +138,7 @@ class LaneNetTusimpleTrainer(object):
 
         # define moving average op
         with tf.variable_scope(name_or_scope='moving_avg'):
-            if CFG.TRAIN.FREEZE_BN.ENABLE:
+            if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
                     v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
                 ]
@@ -152,7 +151,7 @@ class LaneNetTusimpleTrainer(object):
 
         # define training op
         with tf.variable_scope(name_or_scope='train_step'):
-            if CFG.TRAIN.FREEZE_BN.ENABLE:
+            if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
                     v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
                 ]
@@ -201,9 +200,9 @@ class LaneNetTusimpleTrainer(object):
             if ops.exists(self._tboard_save_dir):
                 shutil.rmtree(self._tboard_save_dir)
             os.makedirs(self._tboard_save_dir, exist_ok=True)
-            model_params_file_save_path = ops.join(self._tboard_save_dir, CFG.TRAIN.MODEL_PARAMS_CONFIG_FILE_NAME)
+            model_params_file_save_path = ops.join(self._tboard_save_dir, self._cfg.TRAIN.MODEL_PARAMS_CONFIG_FILE_NAME)
             with open(model_params_file_save_path, 'w', encoding='utf-8') as f_obj:
-                CFG.dump_to_json_file(f_obj)
+                self._cfg.dump_to_json_file(f_obj)
             self._write_summary_op = tf.summary.merge(summary_merge_list)
             self._summary_writer = tf.summary.FileWriter(self._tboard_save_dir, graph=self._sess.graph)
 
@@ -228,7 +227,7 @@ class LaneNetTusimpleTrainer(object):
         """
         self._sess.run(tf.global_variables_initializer())
         self._sess.run(tf.local_variables_initializer())
-        if CFG.TRAIN.RESTORE_FROM_SNAPSHOT.ENABLE:
+        if self._cfg.TRAIN.RESTORE_FROM_SNAPSHOT.ENABLE:
             try:
                 LOG.info('=> Restoring weights from: {:s} ... '.format(self._initial_weight))
                 self._loader.restore(self._sess, self._initial_weight)
