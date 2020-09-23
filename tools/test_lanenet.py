@@ -86,7 +86,7 @@ def test_lanenet(image_path, weights_path):
 
     input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
 
-    net = lanenet.LaneNet(phase='test')
+    net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
 
     postprocessor = lanenet_postprocess.LaneNetPostProcessor()

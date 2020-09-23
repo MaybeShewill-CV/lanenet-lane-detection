@@ -28,10 +28,10 @@ class LaneNet(cnn_basenet.CNNBaseModel):
         self._net_flag = self._cfg.MODEL.FRONT_END
 
         self._frontend = lanenet_front_end.LaneNetFrondEnd(
-            phase=phase, net_flag=self._net_flag
+            phase=phase, net_flag=self._net_flag, cfg=self._cfg
         )
         self._backend = lanenet_back_end.LaneNetBackEnd(
-            phase=phase
+            phase=phase, cfg=self._cfg
         )
 
     def inference(self, input_tensor, name, reuse=False):
