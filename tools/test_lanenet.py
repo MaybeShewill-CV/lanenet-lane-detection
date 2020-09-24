@@ -89,7 +89,7 @@ def test_lanenet(image_path, weights_path):
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
 
-    postprocessor = lanenet_postprocess.LaneNetPostProcessor()
+    postprocessor = lanenet_postprocess.LaneNetPostProcessor(cfg=CFG)
 
     # Set sess configuration
     sess_config = tf.ConfigProto()
