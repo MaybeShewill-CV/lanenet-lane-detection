@@ -1,0 +1,9 @@
+numpy
+tqdm
+glog
+easydict
+tensorflow_gpu
+matplotlib
+opencv
+scikit_learn
+loguru
