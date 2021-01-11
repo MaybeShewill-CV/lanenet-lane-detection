@@ -80,6 +80,10 @@ SOLVER:
     WEIGHT_DECAY: 0.0005
     MOVING_AVE_DECAY: 0.9995
     LOSS_TYPE: 'cross_entropy'
+    OHEM:
+        ENABLE: False
+        SCORE_THRESH: 0.65
+        MIN_SAMPLE_NUMS: 65536
 GPU:
     GPU_MEMORY_FRACTION: 0.9
     TF_ALLOW_GROWTH: True

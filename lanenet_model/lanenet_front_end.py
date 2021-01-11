@@ -17,15 +17,16 @@ class LaneNetFrondEnd(cnn_basenet.CNNBaseModel):
     """
     LaneNet frontend which is used to extract image features for following process
     """
-    def __init__(self, phase, net_flag):
+    def __init__(self, phase, net_flag, cfg):
         """
 
         """
         super(LaneNetFrondEnd, self).__init__()
+        self._cfg = cfg
 
         self._frontend_net_map = {
-            'vgg': vgg16_based_fcn.VGG16FCN(phase=phase),
-            'bisenetv2': bisenet_v2.BiseNetV2(phase=phase),
+            'vgg': vgg16_based_fcn.VGG16FCN(phase=phase, cfg=self._cfg),
+            'bisenetv2': bisenet_v2.BiseNetV2(phase=phase, cfg=self._cfg),
         }
 
         self._net = self._frontend_net_map[net_flag]
