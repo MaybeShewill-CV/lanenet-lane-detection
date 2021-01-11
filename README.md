@@ -24,13 +24,13 @@ The deep neural network inference part can achieve around a 50fps which is simil
 the input pipeline I implemented now need to be improved to achieve a real time lane detection system.
 
 The trained lanenet model weights files are stored in 
-[new_lanenet_model_file](https://www.dropbox.com/sh/tnsf0lw6psszvy4/AAA81r53jpUI3wLsRW6TiPCya?dl=0). You can 
-download the model and put them in folder model/tusimple_lanenet_vgg/
+[lanenet_pretrained_model](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0). You can 
+download the model and put them in folder model/tusimple_lanenet/
 
 You can test a single image on the trained model as follows
 
 ```
-python tools/test_lanenet.py --weights_path /PATH/TO/YOUT/CKPT_FILE_PATH 
+python tools/test_lanenet.py --weights_path /PATH/TO/YOUR/CKPT_FILE_PATH 
 --image_path ./data/tusimple_test_image/0.jpg
 ```
 The results are as follows:
@@ -55,7 +55,7 @@ If you want to evaluate the model on the whole tusimple test dataset you may cal
 ```
 python tools/evaluate_lanenet_on_tusimple.py 
 --image_dir ROOT_DIR/TUSIMPLE_DATASET/test_set/clips 
---weights_path /PATH/TO/YOUT/CKPT_FILE_PATH 
+--weights_path /PATH/TO/YOUR/CKPT_FILE_PATH 
 --save_dir ROOT_DIR/TUSIMPLE_DATASET/test_set/test_output
 ```
 If you set the save_dir argument the result will be saved in that folder 
@@ -72,8 +72,8 @@ detection dataset and make it a video. You may catch a glimpse of it bellow.
 Firstly you need to organize your training data refer to the data/training_data_example folder structure. And you need 
 to generate a train.txt and a val.txt to record the data used for training the model. 
 
-The training samples are consist of three components. A binary segmentation label file and a instance segmentation label
-file and the original image. The binary segmentation use 255 to represent the lane field and 0 for the rest. The 
+The training samples consist of three components, a binary segmentation label file, a instance segmentation label
+file and the original image. The binary segmentation uses 255 to represent the lane field and 0 for the rest. The 
 instance use different pixel value to represent different lane field and 0 for the rest.
 
 All your training image will be scaled into the same scale according to the config file.

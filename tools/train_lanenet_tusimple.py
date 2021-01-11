@@ -24,10 +24,10 @@ def train_model():
     """
     if CFG.TRAIN.MULTI_GPU.ENABLE:
         LOG.info('Using multi gpu trainner ...')
-        worker = multi_gpu_trainner.LaneNetTusimpleMultiTrainer()
+        worker = multi_gpu_trainner.LaneNetTusimpleMultiTrainer(cfg=CFG)
     else:
         LOG.info('Using single gpu trainner ...')
-        worker = single_gpu_trainner.LaneNetTusimpleTrainer()
+        worker = single_gpu_trainner.LaneNetTusimpleTrainer(cfg=CFG)
 
     worker.train()
     return

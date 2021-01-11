@@ -17,10 +17,6 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
-from local_utils.config_utils import parse_config_utils
-
-CFG = parse_config_utils.lanenet_cfg
-
 
 def _morphological_process(image, kernel_size=5):
     """
@@ -144,7 +140,7 @@ class _LaneNetCluster(object):
      Instance segmentation result cluster
     """
 
-    def __init__(self):
+    def __init__(self, cfg):
         """
 
         """
@@ -156,15 +152,15 @@ class _LaneNetCluster(object):
                            np.array([125, 0, 125]),
                            np.array([50, 100, 50]),
                            np.array([100, 50, 100])]
+        self._cfg = cfg
 
-    @staticmethod
-    def _embedding_feats_dbscan_cluster(embedding_image_feats):
+    def _embedding_feats_dbscan_cluster(self, embedding_image_feats):
         """
         dbscan cluster
         :param embedding_image_feats:
         :return:
         """
-        db = DBSCAN(eps=CFG.POSTPROCESS.DBSCAN_EPS, min_samples=CFG.POSTPROCESS.DBSCAN_MIN_SAMPLES)
+        db = DBSCAN(eps=self._cfg.POSTPROCESS.DBSCAN_EPS, min_samples=self._cfg.POSTPROCESS.DBSCAN_MIN_SAMPLES)
         try:
             features = StandardScaler().fit_transform(embedding_image_feats)
             db.fit(features)
@@ -260,14 +256,15 @@ class LaneNetPostProcessor(object):
     """
     lanenet post process for lane generation
     """
-    def __init__(self, ipm_remap_file_path='./data/tusimple_ipm_remap.yml'):
+    def __init__(self, cfg, ipm_remap_file_path='./data/tusimple_ipm_remap.yml'):
         """
 
         :param ipm_remap_file_path: ipm generate file path
         """
         assert ops.exists(ipm_remap_file_path), '{:s} not exist'.format(ipm_remap_file_path)
 
-        self._cluster = _LaneNetCluster()
+        self._cfg = cfg
+        self._cluster = _LaneNetCluster(cfg=cfg)
         self._ipm_remap_file_path = ipm_remap_file_path
 
         remap_file_load_ret = self._load_remap_matrix()

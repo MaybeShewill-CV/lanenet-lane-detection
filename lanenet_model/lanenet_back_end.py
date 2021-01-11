@@ -10,28 +10,27 @@ LaneNet backend branch which is mainly used for binary and instance segmentation
 """
 import tensorflow as tf
 
-from local_utils.config_utils import parse_config_utils
 from lanenet_model import lanenet_discriminative_loss
 from semantic_segmentation_zoo import cnn_basenet
-
-CFG = parse_config_utils.lanenet_cfg
 
 
 class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
     """
     LaneNet backend branch which is mainly used for binary and instance segmentation loss calculation
     """
-    def __init__(self, phase):
+    def __init__(self, phase, cfg):
         """
         init lanenet backend
         :param phase: train or test
         """
         super(LaneNetBackEnd, self).__init__()
+        self._cfg = cfg
         self._phase = phase
         self._is_training = self._is_net_for_training()
 
-        self._class_nums = CFG.DATASET.NUM_CLASSES
-        self._embedding_dims = CFG.MODEL.EMBEDDING_FEATS_DIMS
+        self._class_nums = self._cfg.DATASET.NUM_CLASSES
+        self._embedding_dims = self._cfg.MODEL.EMBEDDING_FEATS_DIMS
+        self._binary_loss_type = self._cfg.SOLVER.LOSS_TYPE
 
     def _is_net_for_training(self):
         """
@@ -64,10 +63,15 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
 
         return loss
 
-    #ref https://blog.csdn.net/u011583927/article/details/90716942
-    def _multi_category_focal_loss(self, onehot_labels, logits, classes_weights, gamma=2.0):
+    @classmethod
+    def _multi_category_focal_loss(cls, onehot_labels, logits, classes_weights, gamma=2.0):
         """
-        focal loss for multi category of multi label problem
+
+        :param onehot_labels:
+        :param logits:
+        :param classes_weights:
+        :param gamma:
+        :return:
         """
         epsilon = 1.e-7
         alpha = tf.multiply(onehot_labels, classes_weights)
@@ -122,17 +126,20 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     tf.log(tf.add(tf.divide(counts, tf.reduce_sum(counts)), tf.constant(1.02)))
                 )
 
-                binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
-                    onehot_labels=binary_label_onehot,
-                    logits=binary_seg_logits,
-                    classes_weights=inverse_weights
-                )
-                '''
-                binary_segmenatation_loss = self._multi_category_focal_loss(
-                    onehot_labels=binary_label_onehot,
-                    logits=binary_seg_logits,
-                    classes_weights=inverse_weights
-                )'''
+                if self._binary_loss_type == 'cross_entropy':
+                    binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
+                        onehot_labels=binary_label_onehot,
+                        logits=binary_seg_logits,
+                        classes_weights=inverse_weights
+                    )
+                elif self._binary_loss_type == 'focal':
+                    binary_segmenatation_loss = self._multi_category_focal_loss(
+                        onehot_labels=binary_label_onehot,
+                        logits=binary_seg_logits,
+                        classes_weights=inverse_weights
+                    )
+                else:
+                    raise NotImplementedError
 
             # calculate class weighted instance seg loss
             with tf.variable_scope(name_or_scope='instance_seg'):

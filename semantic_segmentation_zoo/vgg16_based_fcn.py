@@ -15,22 +15,21 @@ import tensorflow as tf
 from semantic_segmentation_zoo import cnn_basenet
 from local_utils.config_utils import parse_config_utils
 
-CFG = parse_config_utils.lanenet_cfg
-
 
 class VGG16FCN(cnn_basenet.CNNBaseModel):
     """
     VGG 16 based fcn net for semantic segmentation
     """
-    def __init__(self, phase):
+    def __init__(self, phase, cfg):
         """
 
         """
         super(VGG16FCN, self).__init__()
+        self._cfg = cfg
         self._phase = phase
         self._is_training = self._is_net_for_training()
         self._net_intermediate_results = collections.OrderedDict()
-        self._class_nums = CFG.DATASET.NUM_CLASSES
+        self._class_nums = self._cfg.DATASET.NUM_CLASSES
 
     def _is_net_for_training(self):
         """
@@ -369,7 +368,7 @@ if __name__ == '__main__':
     test code
     """
     test_in_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
-    model = VGG16FCN(phase='train')
+    model = VGG16FCN(phase='train', cfg=parse_config_utils.lanenet_cfg)
     ret = model.build_model(test_in_tensor, name='vgg16fcn')
     for layer_name, layer_info in ret.items():
         print('layer name: {:s} shape: {}'.format(layer_name, layer_info['shape']))
