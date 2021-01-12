@@ -1075,7 +1075,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
                 input_tensor=aggregation_branch_output,
                 name='instance_segmentation_branch'
             )
-
+            
             # gather frontend output result
             self._net_intermediate_results['binary_segment_logits'] = {
                 'data': binary_seg_branch_output,

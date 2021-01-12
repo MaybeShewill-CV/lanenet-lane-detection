@@ -82,7 +82,6 @@ def _color_map(idx):
 	  [143, 255, 140]])
     return color_map[idx]
 
-
 class _LaneFeat(object):
     """
 
@@ -197,7 +196,6 @@ class _LaneNetCluster(object):
             return ret
         db_labels = db.labels_
         unique_labels = np.unique(db_labels)
-        print(unique_labels)
         num_clusters = len(unique_labels)
         cluster_centers = db.components_
 
@@ -225,9 +223,6 @@ class _LaneNetCluster(object):
         # lane_embedding_feats = np.hstack((lane_embedding_feats, idx_scale))
         lane_coordinate = np.vstack((idx[1], idx[0])).transpose()
 
-        #log.info(lane_embedding_feats)
-        log.info(lane_embedding_feats.shape)
-        log.info(lane_coordinate.shape)
         assert lane_embedding_feats.shape[0] == lane_coordinate.shape[0]
 
         ret = {
@@ -249,13 +244,7 @@ class _LaneNetCluster(object):
             binary_seg_ret=binary_seg_result,
             instance_seg_ret=instance_seg_result
         )
-        log.info('!!!!!!!!!!!!!!!!!!!')
-        np.set_printoptions(suppress = True, precision = 2, threshold = np.inf)
-        tmp_seg = get_lane_embedding_feats_result['lane_embedding_feats']
-        #for i in range(4):
-            #tmp_seg[:][i] = minmax_scale(tmp_seg[:][i])
-        #tmp_seg = np.array(tmp_seg, np.uint8)
-        print(tmp_seg)
+
         # dbscan cluster
         dbscan_cluster_result = self._embedding_feats_dbscan_cluster(
             embedding_image_feats=get_lane_embedding_feats_result['lane_embedding_feats']
@@ -270,7 +259,6 @@ class _LaneNetCluster(object):
             return None, None
 
         lane_coords = []
-        log.info(len(unique_labels.tolist()))
         for index, label in enumerate(unique_labels.tolist()):
             if label == -1:
                 continue
@@ -395,4 +383,4 @@ class LaneNetPostProcessor(object):
             'instance_image': instance_image,
         }
         return ret
- 
+

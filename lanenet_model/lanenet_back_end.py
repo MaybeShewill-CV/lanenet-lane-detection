@@ -86,7 +86,6 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         weight = tf.pow(tf.subtract(1., y_t), gamma)
         fl = tf.multiply(tf.multiply(weight, ce), alpha)
         loss = tf.reduce_mean(fl)
-        
         return loss
 
     def compute_loss(self, binary_seg_logits, binary_label,
@@ -130,7 +129,6 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     1.0,
                     tf.log(tf.add(tf.divide(counts, tf.reduce_sum(counts)), tf.constant(1.02)))
                 )
-                    
                 if self._binary_loss_type == 'cross_entropy':
                     binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
                         onehot_labels=binary_label_onehot,

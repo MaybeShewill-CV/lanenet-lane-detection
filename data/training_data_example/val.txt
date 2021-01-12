@@ -1,0 +1,2 @@
+ROOT_PATH/lanenet-lane-detection/data/training_data_example/image/0004.png ROOT_PATH/lanenet-lane-detection/data/training_data_example/gt_binary_image/0004.png ROOT_PATH/lanenet-lane-detection/data/training_data_example/gt_instance_image/0004.png
+ROOT_PATH/lanenet-lane-detection/data/training_data_example/image/0005.png ROOT_PATH/lanenet-lane-detection/data/training_data_example/gt_binary_image/0005.png ROOT_PATH/lanenet-lane-detection/data/training_data_example/gt_instance_image/0005.png

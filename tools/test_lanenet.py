@@ -85,7 +85,6 @@ def test_lanenet(image_path, weights_path):
     LOG.info('Image load complete, cost time: {:.5f}s'.format(time.time() - t_start))
 
     input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 720, 1280, 3], name='input_tensor')
-
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
 
@@ -151,9 +150,7 @@ def test_lanenet(image_path, weights_path):
         cv2.imwrite('instance_mask_image.png', embedding_image[:,:,(2,1,0)])
         #cv2.imwrite('source_image.png', postprocess_result['source_image'])
         cv2.imwrite('binary_mask_image.png', binary_seg_image[0] * 125)
-
     sess.close()
-
     return
 
 
