@@ -233,7 +233,7 @@ class LaneNetDataFeeder(object):
         self._train_batch_size = CFG.TRAIN.BATCH_SIZE
         self._val_batch_size = CFG.TRAIN.VAL_BATCH_SIZE
 
-        self._tfrecords_dir = ops.join(self._dataset_dir, 'tfrecords')
+        self._tfrecords_dir = ops.join(self._dataset_dir, 'tfrecords_lane')
         if not ops.exists(self._tfrecords_dir):
             raise ValueError('{:s} not exist, please check again'.format(self._tfrecords_dir))
 

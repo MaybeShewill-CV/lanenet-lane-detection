@@ -17,33 +17,33 @@ semantic_label_dict = {
     #'单实线': 255,
     #'双实线': 255,
     #'双虚线': 255,
-    '可行驶区域': 1,
-    '直行或左转': 3,
-    '左转或直行': 3,
-    '直行或右转': 3,
-    '左弯或向左合流': 3,
-    '右弯或向右合流': 3,
-    '右转或向右合流': 3,
-    '左右转弯': 3,
-    '左转或掉头': 3,
-    '直行': 3,
-    '左转': 3,
-    '右转': 3,
-    '掉头': 3,
-    '箭头': 3,
+    '可行驶区域': 0,
+    '直行或左转': 0,
+    '左转或直行': 0,
+    '直行或右转': 0,
+    '左弯或向左合流': 0,
+    '右弯或向右合流': 0,
+    '右转或向右合流': 0,
+    '左右转弯': 0,
+    '左转或掉头': 0,
+    '直行': 0,
+    '左转': 0,
+    '右转': 0,
+    '掉头': 0,
+    '箭头': 0,
 
-    '停止线': 1,
-    '减速带': 1,
-    '减速让行': 1,
-    '斑马线': 4,
-    '车距确认线': 4,
-    '导流带': 5,
-    '菱形减速标': 1,
+    '停止线': 0,
+    '减速带': 0,
+    '减速让行': 0,
+    '斑马线': 0,
+    '车距确认线': 0,
+    '导流带': 0,
+    '菱形减速标': 0,
 
-    '限速': 1,
-    '文字': 1,
-    '其他': 1,
-    '其它': 1,
+    '限速': 0,
+    '文字': 0,
+    '其他': 0,
+    '其它': 0,
     'TrafficSign': 0,
 }
 instance_label_dict = {
@@ -140,10 +140,10 @@ def processXml(root_path):
                     break
             for instance_key in instance_keys:
                 if instance.text.find(instance_key) >= 0:
-                    semantic_v = 2
+                    semantic_v = 1
                     instance_v = instance_label_dict[instance_key]
                     break
-            if sematic_v == -1 and instance_v == -1:
+            if semantic_v == -1 and instance_v == -1:
                 print(name, instance.text)
                 continue
             if semantic_v == 0 or instance_v == 0:
@@ -227,7 +227,7 @@ def processJson(root_path):
                         break
                 for instance_key in instance_keys:
                     if info['label'].find(instance_key) >= 0:
-                        semantic_v = 2
+                        semantic_v = 1
                         instance_v = instance_label_dict[instance_key]
                         break
                 if semantic_v == -1 and instance_v == -1:
@@ -257,15 +257,13 @@ def resizeAll(root_path):
     gt_image_dir = os.path.join(root_path, 'gt_image')
     gt_semantic_dir = os.path.join(root_path, 'gt_binary_image')
     gt_instance_dir = os.path.join(root_path, 'gt_instance_image')
-    dim = (1280, 720)
     pngs = os.listdir(gt_semantic_dir)
     for png in pngs:
         #semantic_new = semantic_image[min_h:max_h, :]
-     #CityTunnel: 20032514*; 505, 825
-#Highway:    14*;       415, 735
-#sanhuan:    2002*;     480, 800
-#shunyi:     frame*;    281, 505
-
+        #CityTunnel: 20032514*; 505, 825
+        #Highway:    14*;       415, 735
+        #sanhuan:    2002*;     480, 800
+        #shunyi:     frame*;    281, 505
 
         jpg = png[:-3] + 'jpg'
         org_im_path = os.path.join(gt_image_dir, jpg)
@@ -274,6 +272,7 @@ def resizeAll(root_path):
         org_im = cv2.imread(org_im_path, cv2.IMREAD_COLOR)
         semantic_im = cv2.imread(semantic_im_path, cv2.IMREAD_GRAYSCALE)
         instance_im = cv2.imread(instance_im_path, cv2.IMREAD_GRAYSCALE)
+        '''
         if jpg[:8] == '20032514': #CityTunnel
             #print(jpg[:8])
             org_im = org_im[505:825,:]
@@ -294,8 +293,10 @@ def resizeAll(root_path):
             org_im = org_im[281:505,:]
             semantic_im = semantic_im[281:505,:]
             instance_im = instance_im[281:505,:]
+        '''
         if org_im.shape[1] > 1280:
-            dim = (1280, 224)
+            #dim = (1280, 224)
+            dim = (1280, 720)
             org_im = cv2.resize(org_im, dim, interpolation = cv2.INTER_CUBIC)
             semantic_im = cv2.resize(semantic_im, dim, interpolation = cv2.INTER_NEAREST)
             instance_im = cv2.resize(instance_im, dim, interpolation = cv2.INTER_NEAREST)
