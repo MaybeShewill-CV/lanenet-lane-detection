@@ -36,8 +36,8 @@ DATASET:
     STD_VALUE: [0.5, 0.5, 0.5]
     CPU_MULTI_PROCESS_NUMS: 16
 FREEZE:
-    MODEL_FILENAME: 'model'
-    PARAMS_FILENAME: 'params'
+    MODEL_FILENAME: 'model_lane'
+    PARAMS_FILENAME: 'params_lane'
 MODEL:
     MODEL_NAME: 'lanenet'
     FRONT_END: 'bisenetv2'
@@ -47,10 +47,10 @@ MODEL:
         SEMANTIC_CHANNEL_LAMBDA: 0.25
         SEGHEAD_CHANNEL_EXPAND_RATIO: 2
 TEST:
-    TEST_MODEL: 'model/cityscapes/final'
+    TEST_MODEL: 'model_lane/cityscapes/final'
 TRAIN:
-    MODEL_SAVE_DIR: 'model/tusimple_multi/'
-    TBOARD_SAVE_DIR: 'tboard/tusimple_multi/'
+    MODEL_SAVE_DIR: 'model_lane/tusimple_multi/'
+    TBOARD_SAVE_DIR: 'tboard_lane/tusimple_multi/'
     MODEL_PARAMS_CONFIG_FILE_NAME: "model_train_config.json"
     RESTORE_FROM_SNAPSHOT:
         ENABLE: False
@@ -92,5 +92,5 @@ POSTPROCESS:
     DBSCAN_EPS: 0.35
     DBSCAN_MIN_SAMPLES: 1000
 LOG:
-    SAVE_DIR: './log'
+    SAVE_DIR: './log_lane'
     LEVEL: INFO
