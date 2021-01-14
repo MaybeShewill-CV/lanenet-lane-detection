@@ -122,7 +122,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                            binary_label.get_shape().as_list()[3]])
                 # unique_labels, unique_id, counts = tf.unique_with_counts(binary_label_plain)
                 binary_label_plain = tf.cast(binary_label_plain, tf.int32)
-                counts = tf.bincount(binary_label_plain, minlength=6)
+                counts = tf.bincount(binary_label_plain, minlength=2)
                 counts = tf.where(tf.equal(counts, 0), tf.ones_like(counts), counts)
                 counts = tf.cast(counts, tf.float32)
                 inverse_weights = tf.divide(

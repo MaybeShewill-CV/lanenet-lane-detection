@@ -35,7 +35,7 @@ class LaneNetDataProducer(object):
 
         """
         self._dataset_dir = CFG.DATASET.DATA_DIR
-        self._tfrecords_save_dir = ops.join(self._dataset_dir, 'tfrecords')
+        self._tfrecords_save_dir = ops.join(self._dataset_dir, 'tfrecords_lane')
         self._train_example_index_file_path = CFG.DATASET.TRAIN_FILE_LIST
         self._test_example_index_file_path = CFG.DATASET.TEST_FILE_LIST
         self._val_example_index_file_path = CFG.DATASET.VAL_FILE_LIST
@@ -300,8 +300,8 @@ class LaneNetDataFeeder(object):
                     num_parallel_calls=CFG.DATASET.CPU_MULTI_PROCESS_NUMS
                 )
 
-                dataset = dataset.shuffle(buffer_size=32)
-                #dataset = dataset.shuffle(buffer_size=512)
+                #dataset = dataset.shuffle(buffer_size=32)
+                dataset = dataset.shuffle(buffer_size=512)
                 
                 # repeat num epochs
                 dataset = dataset.repeat(self._epoch_nums)

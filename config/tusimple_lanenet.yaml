@@ -69,7 +69,7 @@ TRAIN:
         EPOCH: 1
     MULTI_GPU:
         ENABLE: True
-        GPU_DEVICES: ['0', '1', '2', '3']
+        GPU_DEVICES: ['0', '1']
         CHIEF_DEVICE_INDEX: 0
 SOLVER:
     LR: 0.001
