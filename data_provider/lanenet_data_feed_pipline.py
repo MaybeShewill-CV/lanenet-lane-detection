@@ -301,7 +301,7 @@ class LaneNetDataFeeder(object):
                 )
 
                 #dataset = dataset.shuffle(buffer_size=32)
-                dataset = dataset.shuffle(buffer_size=512)
+                dataset = dataset.shuffle(buffer_size=256)
                 
                 # repeat num epochs
                 dataset = dataset.repeat(self._epoch_nums)

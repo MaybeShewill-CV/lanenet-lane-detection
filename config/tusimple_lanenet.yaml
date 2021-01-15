@@ -53,10 +53,10 @@ TRAIN:
     TBOARD_SAVE_DIR: 'tboard_lane/tusimple_multi/'
     MODEL_PARAMS_CONFIG_FILE_NAME: "model_train_config.json"
     RESTORE_FROM_SNAPSHOT:
-        ENABLE: False
-        SNAPSHOT_PATH: '/workspace/lanenet-lane-detection/model/tusimple_multi/bisenetv2_lanenet/tusimple_val_miou=0.4735.ckpt-248'
+        ENABLE: True
+        SNAPSHOT_PATH: '/workspace/lanenet-lane-detection/model_lane/tusimple_multi/bisenetv2_lanenet/tusimple_val_miou=0.3950.ckpt-12'
     SNAPSHOT_EPOCH: 4
-    BATCH_SIZE: 16
+    BATCH_SIZE: 24
     VAL_BATCH_SIZE: 4
     EPOCH_NUMS: 905
     WARM_UP:
@@ -69,7 +69,7 @@ TRAIN:
         EPOCH: 1
     MULTI_GPU:
         ENABLE: True
-        GPU_DEVICES: ['0', '1']
+        GPU_DEVICES: ['0', '1', '2', '3']
         CHIEF_DEVICE_INDEX: 0
 SOLVER:
     LR: 0.001
