@@ -161,7 +161,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 instance_segmentation_loss, l_var, l_dist, l_reg = \
                     lanenet_discriminative_loss.discriminative_loss(
                         pix_embedding, instance_label, self._embedding_dims,
-                        pix_image_shape, 0.4, 3.0, 1.0, 1.0, 0.001
+                        pix_image_shape, 0.5, 3.0, 1.0, 1.0, 0.001
                     )
 
             l2_reg_loss = tf.constant(0.0, tf.float32)

@@ -45,7 +45,7 @@ def convert_ckpt_into_pb_file(ckpt_file_path, pb_file_path):
     """
     # construct compute graph
     with tf.variable_scope('lanenet'):
-        input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 720, 1280, 3], name='input_tensor')
+        input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 240, 960, 3], name='input_tensor')
 
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')

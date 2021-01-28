@@ -501,6 +501,7 @@ class LaneNetTusimpleMultiTrainer(object):
                         snapshot_model_name = 'tusimple_val_miou={:.4f}.ckpt'.format(val_epoch_mious)
                         snapshot_model_path = ops.join(self._model_save_dir, snapshot_model_name)
                         os.makedirs(self._model_save_dir, exist_ok=True)
+                        print(snapshot_model_path)
                         self._saver.save(self._sess, snapshot_model_path, global_step=epoch)
                     else:
                         best_model = sorted(best_model)

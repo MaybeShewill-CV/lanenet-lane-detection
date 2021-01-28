@@ -80,7 +80,7 @@ def test_lanenet(image_path, weights_path):
     t_start = time.time()
     image = cv2.imread(image_path, cv2.IMREAD_COLOR)
     #image_vis = image
-    image = cv2.resize(image, (1920, 512), interpolation=cv2.INTER_LINEAR)
+    image = cv2.resize(image, (960, 240), interpolation=cv2.INTER_LINEAR)
     image_vis = image
     # image = cv2.resize(image, (1280, 720), interpolation=cv2.INTER_LINEAR)
     # image = cv2.resize(image, (512, 256), interpolation=cv2.INTER_LINEAR)
@@ -126,12 +126,12 @@ def test_lanenet(image_path, weights_path):
         LOG.info('Single imgae inference cost time: {:.5f}s'.format(t_cost))
         LOG.info(binary_seg_image.shape)
         LOG.info(instance_seg_image.shape)
-      
+        '''
         postprocess_result = postprocessor.postprocess2(
             binary_seg_result=binary_seg_image,
             instance_seg_result=instance_seg_image,
             source_image=image_vis
-        )
+        )'''
         #mask_image = postprocess_result['mask_image']
         for i in range(CFG.MODEL.EMBEDDING_FEATS_DIMS):
             instance_seg_image[:, :, i] = minmax_scale(instance_seg_image[:, :, i])
@@ -152,7 +152,7 @@ def test_lanenet(image_path, weights_path):
         #binary_seg_image[0][arrow_idx] = 0
         #binary_seg_image[0][lane_idx] = 0
         #log.info('lane_idx: {:d}, arrow_idx: {:d}'.format(len(lane_idx[0]), len(arrow_idx[0])))
-        cv2.imwrite('instance_mask_image.png', embedding_image[:,:,(2,1,0)])
+        #cv2.imwrite('instance_mask_image.png', embedding_image[:,:,(2,1,0)])
         #cv2.imwrite('source_image.png', postprocess_result['source_image'])
         cv2.imwrite('binary_mask_image.png', binary_seg_image * 125)
 

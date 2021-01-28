@@ -3,12 +3,12 @@ AUG:
     FIX_RESIZE_SIZE: [720, 720] # (width, height), for unpadding
     INF_RESIZE_VALUE: 500  # for rangescaling
     MAX_RESIZE_VALUE: 600  # for rangescaling
-    MIN_RESIZE_VALUE: 400  # for rangescaling
+    MIN_RESIZE_VALUE: 240  # for rangescaling
     MAX_SCALE_FACTOR: 2.0  # for stepscaling
     MIN_SCALE_FACTOR: 0.75  # for stepscaling
     SCALE_STEP_SIZE: 0.25  # for stepscaling
-    TRAIN_CROP_SIZE: [1280, 720]  # crop size for training
-    EVAL_CROP_SIZE: [1280, 720]  # crop size for evaluating
+    TRAIN_CROP_SIZE: [960, 240]  # crop size for training
+    EVAL_CROP_SIZE: [960, 240]  # crop size for evaluating
     CROP_PAD_SIZE: 32
     MIRROR: True
     FLIP: False
@@ -41,7 +41,7 @@ FREEZE:
 MODEL:
     MODEL_NAME: 'lanenet'
     FRONT_END: 'bisenetv2'
-    EMBEDDING_FEATS_DIMS: 3
+    EMBEDDING_FEATS_DIMS: 4
     BISENETV2:
         GE_EXPAND_RATIO: 6
         SEMANTIC_CHANNEL_LAMBDA: 0.25
@@ -53,10 +53,10 @@ TRAIN:
     TBOARD_SAVE_DIR: 'tboard_lane/tusimple_multi/'
     MODEL_PARAMS_CONFIG_FILE_NAME: "model_train_config.json"
     RESTORE_FROM_SNAPSHOT:
-        ENABLE: True
-        SNAPSHOT_PATH: '/workspace/lanenet-lane-detection/model_lane/tusimple_multi/bisenetv2_lanenet/tusimple_val_miou=0.3950.ckpt-12'
-    SNAPSHOT_EPOCH: 4
-    BATCH_SIZE: 24
+        ENABLE: False
+        SNAPSHOT_PATH: '/workspace/lanenet-lane-detection/model_lane/tusimple_multi/bisenetv2_lanenet/tusimple_val_miou=0.6588.ckpt-6'
+    SNAPSHOT_EPOCH: 2
+    BATCH_SIZE: 32
     VAL_BATCH_SIZE: 4
     EPOCH_NUMS: 905
     WARM_UP:

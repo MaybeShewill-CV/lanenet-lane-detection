@@ -80,11 +80,11 @@ def test_lanenet(image_path, weights_path):
     t_start = time.time()
     image = cv2.imread(image_path, cv2.IMREAD_COLOR)
     image_vis = image
-    image = cv2.resize(image, (1280, 720), interpolation=cv2.INTER_LINEAR)
+    image = cv2.resize(image, (960, 240), interpolation=cv2.INTER_LINEAR)
     image = image / 127.5 - 1.0
     LOG.info('Image load complete, cost time: {:.5f}s'.format(time.time() - t_start))
 
-    input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 720, 1280, 3], name='input_tensor')
+    input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 240, 960, 3], name='input_tensor')
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
 
@@ -111,7 +111,7 @@ def test_lanenet(image_path, weights_path):
         saver.restore(sess=sess, save_path=weights_path)
 
         t_start = time.time()
-        loop_times = 500
+        loop_times = 50
         for i in range(loop_times):
             binary_seg_image, instance_seg_image = sess.run(
                 [binary_seg_ret, instance_seg_ret],
