@@ -26,7 +26,7 @@ AUG:
 DATASET:
     DATA_DIR: '/workspace/mogo_data'
     IMAGE_TYPE: 'rgb'  # choice rgb or rgba
-    NUM_CLASSES: 2
+    NUM_CLASSES: 3
     TEST_FILE_LIST: '/workspace/mogo_data/test.txt'
     TRAIN_FILE_LIST: '/workspace/mogo_data/train.txt'
     VAL_FILE_LIST: '/workspace/mogo_data/val.txt'

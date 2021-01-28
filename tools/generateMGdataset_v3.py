@@ -18,19 +18,19 @@ semantic_label_dict = {
     #'双实线': 255,
     #'双虚线': 255,
     '可行驶区域': 0,
-    '直行或左转': 0,
-    '左转或直行': 0,
-    '直行或右转': 0,
-    '左弯或向左合流': 0,
-    '右弯或向右合流': 0,
-    '右转或向右合流': 0,
-    '左右转弯': 0,
-    '左转或掉头': 0,
-    '直行': 0,
-    '左转': 0,
-    '右转': 0,
-    '掉头': 0,
-    '箭头': 0,
+    '直行或左转': 2,
+    '左转或直行': 2,
+    '直行或右转': 02
+    '左弯或向左合流': 2,
+    '右弯或向右合流': 2,
+    '右转或向右合流': 2,
+    '左右转弯': 2,
+    '左转或掉头': 2,
+    '直行': 2,
+    '左转': 2,
+    '右转': 2,
+    '掉头': 2,
+    '箭头': 2,
 
     '停止线': 0,
     '减速带': 0,
@@ -62,10 +62,11 @@ instance_label_dict = {
 }
 
 #semantic_new = semantic_image[min_h:max_h, :]
-#CityTunnel: 20032514*; 505, 825
-#Highway:    14*;       415, 735
-#sanhuan:    2002*;     480, 800
-#shunyi:     frame*;    281, 505
+#CityTunnel: 20032514*; 450, 930
+#Highway:    14*;       450, 930
+#erhuan:     20040815*; 450, 930
+#sanhuan:    2002*;     450, 930
+#shunyi:     frame*;    300, 620
 
 def deleteInvalidXML(root_path):
     xmls = os.listdir(xml_dir_path)
@@ -124,8 +125,12 @@ def processXml(root_path):
         instance_path = os.path.join(gt_instance_dir, png_name)
         _path = os.path.join(gt_image_dir, jpg_name)
         src_image = cv2.imread(src_path, cv2.IMREAD_COLOR)
-        semantic_image = cv2.imread(semantic_path, cv2.IMREAD_GRAYSCALE)
-        instance_image = cv2.imread(instance_path, cv2.IMREAD_GRAYSCALE)
+        if os.path.exists(semantic_path):
+            semantic_image = cv2.imread(semantic_path, cv2.IMREAD_GRAYSCALE)
+            instance_image = cv2.imread(instance_path, cv2.IMREAD_GRAYSCALE)
+        else:
+            semantic_image = np.zeros((src_image.shape[0], src_image.shape[1]), np.uint8)
+            instance_image = np.zeros((src_image.shape[0], src_image.shape[1]), np.uint8)
 
         xml_path = os.path.join(label_dir, name)
         tree = ET.parse(xml_path)
@@ -260,10 +265,11 @@ def resizeAll(root_path):
     pngs = os.listdir(gt_semantic_dir)
     for png in pngs:
         #semantic_new = semantic_image[min_h:max_h, :]
-        #CityTunnel: 20032514*; 505, 825
-        #Highway:    14*;       415, 735
-        #sanhuan:    2002*;     480, 800
-        #shunyi:     frame*;    281, 505
+        #CityTunnel: 20032514*; 450, 930
+        #Highway:    14*;       450, 930
+        #erhuan:     2004*;     450, 930
+        #sanhuan:    2002*;     450, 930
+        #shunyi:     frame*;    300, 620
 
         jpg = png[:-3] + 'jpg'
         org_im_path = os.path.join(gt_image_dir, jpg)
@@ -272,34 +278,24 @@ def resizeAll(root_path):
         org_im = cv2.imread(org_im_path, cv2.IMREAD_COLOR)
         semantic_im = cv2.imread(semantic_im_path, cv2.IMREAD_GRAYSCALE)
         instance_im = cv2.imread(instance_im_path, cv2.IMREAD_GRAYSCALE)
-        '''
-        if jpg[:8] == '20032514': #CityTunnel
+        
+        if jpg[:5] == 'frame': #shunyi
             #print(jpg[:8])
-            org_im = org_im[505:825,:]
-            semantic_im = semantic_im[505:825,:]
-            instance_im = instance_im[505:825,:]
-        elif jpg[:2] == '14': #Highway
+            org_im = org_im[300:620,:]
+            semantic_im = semantic_im[300:620,:]
+            instance_im = instance_im[300:620,:]
+        else: #Others
             #print(jpg[:2])
-            org_im = org_im[415:735,:]
-            semantic_im = semantic_im[415:735,:]
-            instance_im = instance_im[415:735,:]
-        elif jpg[:4] == '2002': #sanhuan
-            #print(jpg[:4])
-            org_im = org_im[480:800,:]
-            semantic_im = semantic_im[480:800,:]
-            instance_im = instance_im[480:800,:]
-        elif jpg[:5] == 'frame': #shunyi
-            #print(jpg[:5])
-            org_im = org_im[281:505,:]
-            semantic_im = semantic_im[281:505,:]
-            instance_im = instance_im[281:505,:]
-        '''
-        if org_im.shape[1] > 1280:
+            org_im = org_im[450:930,:]
+            semantic_im = semantic_im[450:930,:]
+            instance_im = instance_im[450:930,:]
+
+        if org_im.shape[1] > 1000:
             #dim = (1280, 224)
-            dim = (1280, 720)
-            org_im = cv2.resize(org_im, dim, interpolation = cv2.INTER_CUBIC)
-            semantic_im = cv2.resize(semantic_im, dim, interpolation = cv2.INTER_NEAREST)
-            instance_im = cv2.resize(instance_im, dim, interpolation = cv2.INTER_NEAREST)
+            #dim = (960, 240)
+            #org_im = cv2.resize(org_im, dim, interpolation = cv2.INTER_CUBIC)
+            #semantic_im = cv2.resize(semantic_im, dim, interpolation = cv2.INTER_NEAREST)
+            #instance_im = cv2.resize(instance_im, dim, interpolation = cv2.INTER_NEAREST)
             cv2.imwrite(org_im_path, org_im)
             cv2.imwrite(semantic_im_path, semantic_im)
             cv2.imwrite(instance_im_path, instance_im)
