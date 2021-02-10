@@ -9,7 +9,7 @@ AUG:
     SCALE_STEP_SIZE: 0.25  # for stepscaling
     TRAIN_CROP_SIZE: [960, 240]  # crop size for training
     EVAL_CROP_SIZE: [960, 240]  # crop size for evaluating
-    CROP_PAD_SIZE: 32
+    CROP_PAD_SIZE: 16
     MIRROR: True
     FLIP: False
     FLIP_RATIO: 0.5
@@ -53,8 +53,8 @@ TRAIN:
     TBOARD_SAVE_DIR: 'tboard_lane/tusimple_multi/'
     MODEL_PARAMS_CONFIG_FILE_NAME: "model_train_config.json"
     RESTORE_FROM_SNAPSHOT:
-        ENABLE: False
-        SNAPSHOT_PATH: '/workspace/lanenet-lane-detection/model_lane/tusimple_multi/bisenetv2_lanenet/tusimple_val_miou=0.6588.ckpt-6'
+        ENABLE: True
+        SNAPSHOT_PATH: '/workspace/lanenet-lane-detection/model_lane/tusimple_multi/bisenetv2_lanenet/tusimple_val_miou=0.5697.ckpt-904'
     SNAPSHOT_EPOCH: 2
     BATCH_SIZE: 32
     VAL_BATCH_SIZE: 4

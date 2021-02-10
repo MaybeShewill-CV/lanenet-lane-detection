@@ -117,8 +117,8 @@ def test_lanenet(video_path, weights_path):
     """
     assert ops.exists(video_path), '{:s} not exist'.format(video_path)
        
-    obj_w = 1920
-    obj_h = 320
+    obj_w = 960
+    obj_h = 240
     input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, obj_h, obj_w, 3], name='input_tensor')
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
@@ -149,7 +149,7 @@ def test_lanenet(video_path, weights_path):
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         log.info('width: %d, height: %d', width, height)
-        out = cv2.VideoWriter('out.mp4', fourcc, 15, (obj_w, obj_h), isColor=True)
+        out = cv2.VideoWriter('out.mp4', fourcc, 30, (obj_w, obj_h), isColor=True)
         nn = 1000
         #while(cap.isOpened() and nn >= 0):
         while(cap.isOpened()):
@@ -158,7 +158,8 @@ def test_lanenet(video_path, weights_path):
             if ret:
                 #image = cv2.imread('/workspace/lanenet-lane-detection/1410486660.jpg')
                 # image = cv2.resize(image, (1280, 720), interpolation=cv2.INTER_LINEAR)
-                image = image[442:762, :]
+                image = image[600:1080, :]
+                image = cv2.resize(image, (960, 240), interpolation=cv2.INTER_LINEAR)
                 image_vis = image.copy()
                 image = image / 127.5 - 1.0
 
@@ -174,13 +175,16 @@ def test_lanenet(video_path, weights_path):
                 #mask_image = gen_color_img(binary_seg_image[0], instance_seg_image[0], 5)
                 #cv2.imwrite('test.png', mask_image)
                 #return
-                postprocess_result = postprocessor.postprocess2(
-                    binary_seg_result = binary_seg_image[0],
-                    instance_seg_result = instance_seg_image[0],
-                    source_image = image_vis
-                )
-                binary_image = postprocess_result['binary_image']
-                instance_image = postprocess_result['instance_image']
+                #postprocess_result = postprocessor.postprocess2(
+                    #binary_seg_result = binary_seg_image[0],
+                    #instance_seg_result = instance_seg_image[0],
+                    #source_image = image_vis
+                #)
+                #binary_image = postprocess_result['binary_image']
+                #instance_image = postprocess_result['instance_image']
+                #binary_seg = np.array(binary_seg_image[0] * 100, dtype=np.uint8)
+                idxs = np.where(binary_seg_image[0] == 1)
+                image_vis[idxs] = (200,200,200)
                 '''
                 np.set_printoptions(suppress = True, precision = 2, threshold = np.inf)
                 print('before: ')
@@ -191,9 +195,9 @@ def test_lanenet(video_path, weights_path):
                 print('after: ')
                 print(embedding_image)
                 '''
-                out.write(np.uint8(instance_image))
-                #out.write(np.uint8(mask_image))
-                #cv2.imwrite('test.png', binary_image)
+                #out.write(np.uint8(instance_image))
+                out.write(image_vis)
+                #cv2.imwrite('test.png', binary_seg)
                 #return
             else:
                 break
