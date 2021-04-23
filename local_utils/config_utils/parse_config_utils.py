@@ -223,16 +223,3 @@ class Config(dict):
 
 
 lanenet_cfg = Config(config_path='./config/tusimple_lanenet.yaml')
-
-
-if __name__ == '__main__':
-    """
-    test
-    """
-    train_epoch_nums = cityscapes_cfg_v2.TRAIN.EPOCH_NUMS
-    batch_size = cityscapes_cfg_v2.TRAIN.BATCH_SIZE
-    model_save_dir = cityscapes_cfg_v2.TRAIN.MODEL_SAVE_DIR
-    snapshot_epoch = cityscapes_cfg_v2.TRAIN.SNAPSHOT_EPOCH
-    enable_miou = cityscapes_cfg_v2.TRAIN.COMPUTE_MIOU.ENABLE
-    with open('./test_config_file.json', 'w', encoding='utf-8') as file:
-        cityscapes_cfg_v2.dump_to_json_file(file)
