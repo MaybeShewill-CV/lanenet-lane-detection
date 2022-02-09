@@ -1,6 +1,6 @@
 glog==0.3.1
 loguru==0.2.5
-tensorflow_gpu==1.15.0
+tensorflow_gpu==2.5.3
 tqdm==4.28.1
 matplotlib==2.2.4
 opencv_contrib_python==4.2.0.32
