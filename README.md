@@ -152,28 +152,6 @@ New lanenet model trainned based on BiseNetV2 can be found [here](https://www.dr
 
 The new model can reach 78 fps in single image inference process.
 
-## MNN Project
-
-Add tools to convert lanenet tensorflow ckpt model into mnn model and deploy
-the model on mobile device
-
-#### Freeze your tensorflow ckpt model weights file
-```
-cd LANENET_PROJECT_ROOT_DIR
-python mnn_project/freeze_lanenet_model.py -w lanenet.ckpt -s lanenet.pb
-```
-
-#### Convert pb model into mnn model
-```
-cd MNN_PROJECT_ROOT_DIR/tools/converter/build
-./MNNConver -f TF --modelFile lanenet.pb --MNNModel lanenet.mnn --bizCode MNN
-```
-
-#### Add lanenet source code into MNN project 
-
-Add lanenet source code into MNN project and modified CMakeList.txt to 
-compile the executable binary file.
-
 ## Recently updates 2022.05.28
 
 Since lots of user have encountered with a empty mask image problem when they do model inference using their own custom
@@ -216,6 +194,27 @@ directly using the pretrained model.
 
 Hope it helps:)
 
+## MNN Project
+
+Add tools to convert lanenet tensorflow ckpt model into mnn model and deploy
+the model on mobile device
+
+#### Freeze your tensorflow ckpt model weights file
+```
+cd LANENET_PROJECT_ROOT_DIR
+python mnn_project/freeze_lanenet_model.py -w lanenet.ckpt -s lanenet.pb
+```
+
+#### Convert pb model into mnn model
+```
+cd MNN_PROJECT_ROOT_DIR/tools/converter/build
+./MNNConver -f TF --modelFile lanenet.pb --MNNModel lanenet.mnn --bizCode MNN
+```
+
+#### Add lanenet source code into MNN project 
+
+Add lanenet source code into MNN project and modified CMakeList.txt to 
+compile the executable binary file.
 
 ## TODO
 - [x] Add a embedding visualization tools to visualize the embedding feature map
