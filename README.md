@@ -25,7 +25,9 @@ the input pipeline I implemented now need to be improved to achieve a real time 
 
 The trained lanenet model weights files are stored in 
 [lanenet_pretrained_model](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0). You can 
-download the model and put them in folder model/tusimple_lanenet/
+download the model and put them in folder weights/tusimple_lanenet/
+You may also download the pretrained model via [BaiduNetDisk here](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) and
+extract code is 86sd.
 
 You can test a single image on the trained model as follows
 
@@ -149,6 +151,7 @@ Add real-time segmentation model BiseNetV2 as lanenet backbone. You may modify t
 config/tusimple_lanenet.yaml config file to choose the front-end of lanenet model.
 
 New lanenet model trainned based on BiseNetV2 can be found [here](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0)
+[BaiduNetDisk](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) is available too and extract code is 86sd
 
 The new model can reach 78 fps in single image inference process.
 
