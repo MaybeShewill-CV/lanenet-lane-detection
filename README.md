@@ -151,6 +151,7 @@ Add real-time segmentation model BiseNetV2 as lanenet backbone. You may modify t
 config/tusimple_lanenet.yaml config file to choose the front-end of lanenet model.
 
 New lanenet model trainned based on BiseNetV2 can be found [here](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0)
+
 [BaiduNetDisk](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) is available too and extract code is 86sd
 
 The new model can reach 78 fps in single image inference process.
