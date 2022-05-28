@@ -152,7 +152,8 @@ config/tusimple_lanenet.yaml config file to choose the front-end of lanenet mode
 
 New lanenet model trainned based on BiseNetV2 can be found [here](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0)
 
-[BaiduNetDisk](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) is available too and extract code is 86sd
+[BaiduNetDisk](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) is available too.
+Site is [](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) and extract code is 86sd
 
 The new model can reach 78 fps in single image inference process.
 
