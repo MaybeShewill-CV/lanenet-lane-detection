@@ -26,6 +26,7 @@ the input pipeline I implemented now need to be improved to achieve a real time 
 The trained lanenet model weights files are stored in 
 [lanenet_pretrained_model](https://www.dropbox.com/sh/0b6r0ljqi76kyg9/AADedYWO3bnx4PhK1BmbJkJKa?dl=0). You can 
 download the model and put them in folder weights/tusimple_lanenet/
+
 You may also download the pretrained model via [BaiduNetDisk here](https://pan.baidu.com/s/1sLLSE1CWksKNxmRIGaQn_A) and
 extract code is 86sd.
 
