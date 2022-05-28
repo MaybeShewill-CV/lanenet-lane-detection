@@ -12,7 +12,6 @@ import os.path as ops
 import math
 
 import cv2
-import glog as log
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler

@@ -1,10 +1,8 @@
-glog==0.3.1
-loguru==0.2.5
+loguru
+tqdm
+matplotlib
+opencv_contrib_python
+numpy
+scikit_learn
+PyYAML
 tensorflow_gpu==1.15.0
-tqdm==4.28.1
-matplotlib==2.2.4
-opencv_contrib_python==4.2.0.32
-numpy==1.16.4
-scikit_learn==0.24.1
-tensorflow==1.15.0
-PyYAML==5.4.1

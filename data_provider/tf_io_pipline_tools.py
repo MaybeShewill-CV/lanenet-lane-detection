@@ -12,13 +12,14 @@ import os
 import os.path as ops
 
 import cv2
-import glog as log
 import numpy as np
+import loguru
 import tensorflow as tf
 
 from local_utils.config_utils import parse_config_utils
 
 CFG = parse_config_utils.lanenet_cfg
+LOG = loguru.logger
 
 RESIZE_IMAGE_HEIGHT = CFG.AUG.TRAIN_CROP_SIZE[1] + CFG.AUG.CROP_PAD_SIZE
 RESIZE_IMAGE_WIDTH = CFG.AUG.TRAIN_CROP_SIZE[0] + CFG.AUG.CROP_PAD_SIZE
@@ -55,7 +56,7 @@ def write_example_tfrecords(gt_images_paths, gt_binary_images_paths, gt_instance
     _tfrecords_dir = ops.split(tfrecords_path)[0]
     os.makedirs(_tfrecords_dir, exist_ok=True)
 
-    log.info('Writing {:s}....'.format(tfrecords_path))
+    LOG.info('Writing {:s}....'.format(tfrecords_path))
 
     with tf.python_io.TFRecordWriter(tfrecords_path) as _writer:
         for _index, _gt_image_path in enumerate(gt_images_paths):
@@ -100,7 +101,7 @@ def write_example_tfrecords(gt_images_paths, gt_binary_images_paths, gt_instance
                     }))
             _writer.write(_example.SerializeToString())
 
-    log.info('Writing {:s} complete'.format(tfrecords_path))
+    LOG.info('Writing {:s} complete'.format(tfrecords_path))
 
     return
 
@@ -223,9 +224,9 @@ def normalize(gt_image, gt_binary_image, gt_instance_image):
     if gt_image.get_shape().as_list()[-1] != 3 \
             or gt_binary_image.get_shape().as_list()[-1] != 1 \
             or gt_instance_image.get_shape().as_list()[-1] != 1:
-        log.error(gt_image.get_shape())
-        log.error(gt_binary_image.get_shape())
-        log.error(gt_instance_image.get_shape())
+        LOG.error(gt_image.get_shape())
+        LOG.error(gt_binary_image.get_shape())
+        LOG.error(gt_instance_image.get_shape())
         raise ValueError('Input must be of size [height, width, C>0]')
 
     gt_image = tf.cast(gt_image, dtype=tf.float32)
