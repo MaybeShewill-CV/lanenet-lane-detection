@@ -195,8 +195,8 @@ Before you test the example custom data remember to adjust dbscan cluster params
 result should be like
 ![black_mask_after_adjust](./data/source_image/black_mask_after_adjust.png)
 
-To get better lane detection result on your own local custom data you'd better train your own model on custom dataset rather
-directly using the pretrained model.
+To get better lane detection result on your own data you'd better train a new model on custom dataset rather than
+using the pretrained model directly.
 
 Hope it helps:)
 
