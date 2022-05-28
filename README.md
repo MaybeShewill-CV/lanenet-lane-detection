@@ -174,6 +174,49 @@ cd MNN_PROJECT_ROOT_DIR/tools/converter/build
 Add lanenet source code into MNN project and modified CMakeList.txt to 
 compile the executable binary file.
 
+## Recently updates 2022.05.28
+
+Since lots of user have encountered with a empty mask image problem when they do model inference using their own custom
+data. For example the user [issue](https://github.com/MaybeShewill-CV/lanenet-lane-detection/issues/382) have encountered
+such a problem. I have openend a discussion [here](https://github.com/MaybeShewill-CV/lanenet-lane-detection/discussions/561#discussion-4104802)
+to give some advice to solve those problem.
+
+That problem mainly caused by the dbscan cluster's params was not properly adjusted for custom data. For example if I use
+the default dbscan param settled [here](https://github.com/MaybeShewill-CV/lanenet-lane-detection/blob/5f704c86759b0b65955fb27c85a42f343c1c8c5c/config/tusimple_lanenet.yaml#L90-L93)
+```
+POSTPROCESS:
+    MIN_AREA_THRESHOLD: 100
+    DBSCAN_EPS: 0.35
+    DBSCAN_MIN_SAMPLES: 1000
+```
+The inference result was
+![black_mask](./data/source_image/black_mask.png)
+
+When I enlarge the dbscan DBSCAN_EPS param from 0.35 to 0.5 and reduce DBSCAN_MIN_SAMPLES from 1000 to 250. The infer
+ence result was
+![black_mask_after_adjust](./data/source_image/black_mask_after_adjust.png)
+
+Some more detailed discussion you may find in [discussion module](https://github.com/MaybeShewill-CV/lanenet-lane-detection/discussions/561#discussion-4104802)
+
+The lane fit process in postprocess module was designed for tusimple dataset which means it can not work well on your
+custorm data. So I add an option in testing scripts to disable this feature when processing custom data. It will plot
+mask image directly upon source image
+
+```
+python tools/test_lanenet.py --weights_path /PATH/TO/YOUR/CKPT_FILE_PATH 
+--image_path ./data/custom_test_image/test.png --with_lane_fit 0
+```
+
+Before you test the example custom data remember to adjust dbscan cluster params following instruction above and the test
+result should be like
+![black_mask_after_adjust](./data/source_image/black_mask_after_adjust.png)
+
+To get better lane detection result on your own local custom data you'd better train your own model on custom dataset rather
+directly using the pretrained model.
+
+Hope it helps:)
+
+
 ## TODO
 - [x] Add a embedding visualization tools to visualize the embedding feature map
 - [x] Add detailed explanation of training the components of lanenet separately.

@@ -13,8 +13,11 @@ import math
 
 import cv2
 import numpy as np
+import loguru
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+
+LOG = loguru.logger
 
 
 def _morphological_process(image, kernel_size=5):
@@ -164,7 +167,7 @@ class _LaneNetCluster(object):
             features = StandardScaler().fit_transform(embedding_image_feats)
             db.fit(features)
         except Exception as err:
-            log.error(err)
+            LOG.error(err)
             ret = {
                 'origin_features': None,
                 'cluster_nums': 0,
@@ -199,8 +202,6 @@ class _LaneNetCluster(object):
         """
         idx = np.where(binary_seg_ret == 255)
         lane_embedding_feats = instance_seg_ret[idx]
-        # idx_scale = np.vstack((idx[0] / 256.0, idx[1] / 512.0)).transpose()
-        # lane_embedding_feats = np.hstack((lane_embedding_feats, idx_scale))
         lane_coordinate = np.vstack((idx[1], idx[0])).transpose()
 
         assert lane_embedding_feats.shape[0] == lane_coordinate.shape[0]
@@ -239,7 +240,6 @@ class _LaneNetCluster(object):
             return None, None
 
         lane_coords = []
-
         for index, label in enumerate(unique_labels.tolist()):
             if label == -1:
                 continue
@@ -300,13 +300,14 @@ class LaneNetPostProcessor(object):
 
     def postprocess(self, binary_seg_result, instance_seg_result=None,
                     min_area_threshold=100, source_image=None,
-                    data_source='tusimple'):
+                    with_lane_fit=True, data_source='tusimple'):
         """
 
         :param binary_seg_result:
         :param instance_seg_result:
         :param min_area_threshold:
         :param source_image:
+        :param with_lane_fit:
         :param data_source:
         :return:
         """
@@ -336,6 +337,18 @@ class LaneNetPostProcessor(object):
                 'mask_image': None,
                 'fit_params': None,
                 'source_image': None,
+            }
+        if not with_lane_fit:
+            tmp_mask = cv2.resize(
+                mask_image,
+                dsize=(source_image.shape[1], source_image.shape[0]),
+                interpolation=cv2.INTER_NEAREST
+            )
+            source_image = cv2.addWeighted(source_image, 0.6, tmp_mask, 0.4, 0.0, dst=source_image)
+            return {
+                'mask_image': mask_image,
+                'fit_params': None,
+                'source_image': source_image,
             }
 
         # lane line fit
