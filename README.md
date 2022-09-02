@@ -116,6 +116,14 @@ The accuracy during training process rises as follows:
 
 Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you use it.
 
+## Serve Your Model
+
+If you want to serve your model via a web server you may be interested in [mortred_model_server](https://github.com/MaybeShewill-CV/mortred_model_server) which is a high performace web server for DNN vision models  :fire::fire::fire:
+
+<p align="left">
+  <img src='./data/source_image/mortred_model_server.png' alt='mortred_model_server'>
+</p>
+
 ## Recently updates 2018.11.10
 Adjust some basic cnn op according to the new tensorflow api. Use the 
 traditional SGD optimizer to optimize the whole model instead of the
