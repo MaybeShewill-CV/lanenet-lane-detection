@@ -234,6 +234,10 @@ compile the executable binary file.
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/ffa5169a3a4002d4f573b12be173c9382d14b78a.svg "Repobeats analytics image")
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=MaybeShewill-CV/mortred_model_server,MaybeShewill-CV/lanenet-lane-detection&type=Date)](https://star-history.com/#MaybeShewill-CV/mortred_model_server&MaybeShewill-CV/lanenet-lane-detection&Date)
+
 ## TODO
 - [x] Add a embedding visualization tools to visualize the embedding feature map
 - [x] Add detailed explanation of training the components of lanenet separately.
