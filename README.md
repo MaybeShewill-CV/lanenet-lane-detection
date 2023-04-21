@@ -116,6 +116,15 @@ The accuracy during training process rises as follows:
 
 Please cite my repo [lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection) if you use it.
 
+## Segment-Anything-U-Specify
+
+You must be interested in recently released SAM model. Here's a repo using clip + sam to segment any instances you specify.
+[segment-anything-u-specify](https://github.com/MaybeShewill-CV/segment-anything-u-specify).
+
+<p align="left">
+  <img src='./data/source_image/sam_clip_seg.png' alt='segment-anything-u-specify'>
+</p>
+
 ## Serve Your Model
 
 If you want to serve your model via a web server you may be interested in [mortred_model_server](https://github.com/MaybeShewill-CV/mortred_model_server) which is a high performace web server for DNN vision models  :fire::fire::fire:
