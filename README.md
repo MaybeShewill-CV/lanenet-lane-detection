@@ -262,6 +262,10 @@ The lanenet project refers to the following projects:
 - [SimpleDBSCAN](https://github.com/CallmeNezha/SimpleDBSCAN)
 - [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)
 
+## Visitor Count
+
+![Visitor Count](https://profile-counter.glitch.me/15725187/count.svg)
+
 ## Contact
 
 Scan the following QR to disscuss :)
