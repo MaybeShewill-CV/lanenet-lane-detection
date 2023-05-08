@@ -264,7 +264,7 @@ The lanenet project refers to the following projects:
 
 ## Visitor Count
 
-![Visitor Count](https://profile-counter.glitch.me/15725187/count.svg)
+![Visitor Count](https://profile-counter.glitch.me/15725187_lanenet/count.svg)
 
 ## Contact
 
