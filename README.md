@@ -245,7 +245,7 @@ compile the executable binary file.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=MaybeShewill-CV/mortred_model_server,MaybeShewill-CV/lanenet-lane-detection&type=Date)](https://star-history.com/#MaybeShewill-CV/mortred_model_server&MaybeShewill-CV/lanenet-lane-detection&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=MaybeShewill-CV/lanenet-lane-detection&type=Date)](https://star-history.com/#MaybeShewill-CV/lanenet-lane-detection&Date)
 
 ## TODO
 - [x] Add a embedding visualization tools to visualize the embedding feature map
