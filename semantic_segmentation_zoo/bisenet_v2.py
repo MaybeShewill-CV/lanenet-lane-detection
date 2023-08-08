@@ -54,7 +54,7 @@ class _StemBlock(cnn_basenet.CNNBaseModel):
         :param use_bias:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self.conv2d(
                 inputdata=input_tensor,
                 out_channel=output_channels,
@@ -83,7 +83,7 @@ class _StemBlock(cnn_basenet.CNNBaseModel):
         output_channels = kwargs['output_channels']
         if 'padding' in kwargs:
             self._padding = kwargs['padding']
-        with tf.variable_scope(name_or_scope=name_scope):
+        with tf.compat.v1.variable_scope(name_or_scope=name_scope):
             input_tensor = self._conv_block(
                 input_tensor=input_tensor,
                 k_size=3,
@@ -94,7 +94,7 @@ class _StemBlock(cnn_basenet.CNNBaseModel):
                 use_bias=False,
                 need_activate=True
             )
-            with tf.variable_scope(name_or_scope='downsample_branch_left'):
+            with tf.compat.v1.variable_scope(name_or_scope='downsample_branch_left'):
                 branch_left_output = self._conv_block(
                     input_tensor=input_tensor,
                     k_size=1,
@@ -115,7 +115,7 @@ class _StemBlock(cnn_basenet.CNNBaseModel):
                     use_bias=False,
                     need_activate=True
                 )
-            with tf.variable_scope(name_or_scope='downsample_branch_right'):
+            with tf.compat.v1.variable_scope(name_or_scope='downsample_branch_right'):
                 branch_right_output = self.maxpooling(
                     inputdata=input_tensor,
                     kernel_size=3,
@@ -175,7 +175,7 @@ class _ContextEmbedding(cnn_basenet.CNNBaseModel):
         :param use_bias:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self.conv2d(
                 inputdata=input_tensor,
                 out_channel=output_channels,
@@ -204,7 +204,7 @@ class _ContextEmbedding(cnn_basenet.CNNBaseModel):
         output_channels = input_tensor.get_shape().as_list()[-1]
         if 'padding' in kwargs:
             self._padding = kwargs['padding']
-        with tf.variable_scope(name_or_scope=name_scope):
+        with tf.compat.v1.variable_scope(name_or_scope=name_scope):
             result = tf.reduce_mean(input_tensor, axis=[1, 2], keepdims=True, name='global_avg_pooling')
             result = self.layerbn(result, self._is_training, 'bn')
             result = self._conv_block(
@@ -270,7 +270,7 @@ class _GatherExpansion(cnn_basenet.CNNBaseModel):
         :param use_bias:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self.conv2d(
                 inputdata=input_tensor,
                 out_channel=output_channels,
@@ -296,7 +296,7 @@ class _GatherExpansion(cnn_basenet.CNNBaseModel):
         :return:
         """
         input_tensor_channels = input_tensor.get_shape().as_list()[-1]
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self._conv_block(
                 input_tensor=input_tensor,
                 k_size=3,
@@ -340,7 +340,7 @@ class _GatherExpansion(cnn_basenet.CNNBaseModel):
         :return:
         """
         input_tensor_channels = input_tensor.get_shape().as_list()[-1]
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             input_proj = self.depthwise_conv(
                 input_tensor=input_tensor,
                 kernel_size=3,
@@ -422,7 +422,7 @@ class _GatherExpansion(cnn_basenet.CNNBaseModel):
         if 'e' in kwargs:
             self._expansion_factor = kwargs['e']
 
-        with tf.variable_scope(name_or_scope=name_scope):
+        with tf.compat.v1.variable_scope(name_or_scope=name_scope):
             if self._stride == 1:
                 result = self._apply_ge_when_stride_equal_one(
                     input_tensor=input_tensor,
@@ -480,7 +480,7 @@ class _GuidedAggregation(cnn_basenet.CNNBaseModel):
         :param use_bias:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self.conv2d(
                 inputdata=input_tensor,
                 out_channel=output_channels,
@@ -511,8 +511,8 @@ class _GuidedAggregation(cnn_basenet.CNNBaseModel):
         if 'padding' in kwargs:
             self._padding = kwargs['padding']
 
-        with tf.variable_scope(name_or_scope=name_scope):
-            with tf.variable_scope(name_or_scope='detail_branch'):
+        with tf.compat.v1.variable_scope(name_or_scope=name_scope):
+            with tf.compat.v1.variable_scope(name_or_scope='detail_branch'):
                 detail_branch_remain = self.depthwise_conv(
                     input_tensor=detail_input_tensor,
                     kernel_size=3,
@@ -550,7 +550,7 @@ class _GuidedAggregation(cnn_basenet.CNNBaseModel):
                     name='avg_pooling_block'
                 )
 
-            with tf.variable_scope(name_or_scope='semantic_branch'):
+            with tf.compat.v1.variable_scope(name_or_scope='semantic_branch'):
                 semantic_branch_remain = self.depthwise_conv(
                     input_tensor=semantic_input_tensor,
                     kernel_size=3,
@@ -581,14 +581,14 @@ class _GuidedAggregation(cnn_basenet.CNNBaseModel):
                     use_bias=False,
                     need_activate=False
                 )
-                semantic_branch_upsample = tf.image.resize_bilinear(
+                semantic_branch_upsample = tf.image.resize(
                     semantic_branch_upsample,
                     detail_input_tensor.shape[1:3],
-                    name='semantic_upsample_features'
+                    method=tf.image.ResizeMethod.BILINEAR, name='semantic_upsample_features'
                 )
                 semantic_branch_upsample = self.sigmoid(semantic_branch_upsample, name='semantic_upsample_sigmoid')
 
-            with tf.variable_scope(name_or_scope='aggregation_features'):
+            with tf.compat.v1.variable_scope(name_or_scope='aggregation_features'):
                 guided_features_remain = tf.multiply(
                     detail_branch_remain,
                     semantic_branch_upsample,
@@ -599,10 +599,10 @@ class _GuidedAggregation(cnn_basenet.CNNBaseModel):
                     semantic_branch_remain,
                     name='guided_semantic_features'
                 )
-                guided_features_upsample = tf.image.resize_bilinear(
+                guided_features_upsample = tf.image.resize(
                     guided_features_downsample,
                     detail_input_tensor.shape[1:3],
-                    name='guided_upsample_features'
+                    method=tf.image.ResizeMethod.BILINEAR, name='guided_upsample_features'
                 )
                 guided_features = tf.add(guided_features_remain, guided_features_upsample, name='fused_features')
                 guided_features = self._conv_block(
@@ -655,7 +655,7 @@ class _SegmentationHead(cnn_basenet.CNNBaseModel):
         :param use_bias:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self.conv2d(
                 inputdata=input_tensor,
                 out_channel=output_channels,
@@ -689,7 +689,7 @@ class _SegmentationHead(cnn_basenet.CNNBaseModel):
         if 'padding' in kwargs:
             self._padding = kwargs['padding']
 
-        with tf.variable_scope(name_or_scope=name_scope):
+        with tf.compat.v1.variable_scope(name_or_scope=name_scope):
             result = self._conv_block(
                 input_tensor=input_tensor,
                 k_size=3,
@@ -709,10 +709,10 @@ class _SegmentationHead(cnn_basenet.CNNBaseModel):
                 use_bias=False,
                 name='1x1_conv_block'
             )
-            result = tf.image.resize_bilinear(
+            result = tf.image.resize(
                 result,
                 output_tensor_size,
-                name='segmentation_head_logits'
+                method=tf.image.ResizeMethod.BILINEAR, name='segmentation_head_logits'
             )
         return result
 
@@ -820,7 +820,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         :param use_bias:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self.conv2d(
                 inputdata=input_tensor,
                 out_channel=output_channels,
@@ -845,9 +845,9 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         :return:
         """
         result = input_tensor
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             for stage_name, stage_params in self._detail_branch_channels.items():
-                with tf.variable_scope(stage_name):
+                with tf.compat.v1.variable_scope(stage_name):
                     for block_index, param in enumerate(stage_params):
                         block_op = self._block_maps[param[0]]
                         k_size = param[1]
@@ -855,7 +855,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
                         stride = param[3]
                         repeat_times = param[4]
                         for repeat_index in range(repeat_times):
-                            with tf.variable_scope(name_or_scope='conv_block_{:d}_repeat_{:d}'.format(
+                            with tf.compat.v1.variable_scope(name_or_scope='conv_block_{:d}_repeat_{:d}'.format(
                                     block_index + 1, repeat_index + 1)):
                                 if stage_name == 'stage_3' and block_index == 1 and repeat_index == 1:
                                     result = block_op(
@@ -892,10 +892,10 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         seg_head_inputs = collections.OrderedDict()
         result = input_tensor
         source_input_tensor_size = input_tensor.get_shape().as_list()[1:3]
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             for stage_name, stage_params in self._semantic_branch_channels.items():
                 seg_head_input = input_tensor
-                with tf.variable_scope(stage_name):
+                with tf.compat.v1.variable_scope(stage_name):
                     for block_index, param in enumerate(stage_params):
                         block_op_name = param[0]
                         block_op = self._block_maps[block_op_name]
@@ -904,7 +904,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
                         stride = param[4]
                         repeat_times = param[5]
                         for repeat_index in range(repeat_times):
-                            with tf.variable_scope(name_or_scope='{:s}_block_{:d}_repeat_{:d}'.format(
+                            with tf.compat.v1.variable_scope(name_or_scope='{:s}_block_{:d}_repeat_{:d}'.format(
                                     block_op_name, block_index + 1, repeat_index + 1)):
                                 if block_op_name == 'ge':
                                     result = block_op(
@@ -951,7 +951,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         :param name:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             result = self._guided_aggregation_block(
                 detail_input_tensor=detail_output,
                 semantic_input_tensor=semantic_output,
@@ -969,7 +969,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         input_tensor_size = input_tensor.get_shape().as_list()[1:3]
         output_tensor_size = [int(tmp * 8) for tmp in input_tensor_size]
 
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             output_tensor = self._conv_block(
                 input_tensor=input_tensor,
                 k_size=3,
@@ -988,10 +988,10 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
                 use_bias=False,
                 need_activate=False
             )
-            output_tensor = tf.image.resize_bilinear(
+            output_tensor = tf.image.resize(
                 output_tensor,
                 output_tensor_size,
-                name='instance_logits'
+                method=tf.image.ResizeMethod.BILINEAR, name='instance_logits'
             )
         return output_tensor
 
@@ -1005,7 +1005,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         input_tensor_size = input_tensor.get_shape().as_list()[1:3]
         output_tensor_size = [int(tmp * 8) for tmp in input_tensor_size]
 
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             output_tensor = self._conv_block(
                 input_tensor=input_tensor,
                 k_size=3,
@@ -1033,10 +1033,10 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
                 use_bias=False,
                 need_activate=False
             )
-            output_tensor = tf.image.resize_bilinear(
+            output_tensor = tf.image.resize(
                 output_tensor,
                 output_tensor_size,
-                name='binary_logits'
+                method=tf.image.ResizeMethod.BILINEAR, name='binary_logits'
             )
         return output_tensor
 
@@ -1048,7 +1048,7 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
             # build detail branch
             detail_branch_output = self.build_detail_branch(
                 input_tensor=input_tensor,
@@ -1091,7 +1091,7 @@ if __name__ == '__main__':
     """
     test code
     """
-    test_in_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
+    test_in_tensor = tf.compat.v1.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
     model = BiseNetV2(phase='train', cfg=parse_config_utils.lanenet_cfg)
     ret = model.build_model(test_in_tensor, name='bisenetv2')
     for layer_name, layer_info in ret.items():

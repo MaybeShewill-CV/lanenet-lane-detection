@@ -86,7 +86,7 @@ def test_lanenet(image_path, weights_path, with_lane_fit=True):
     image = image / 127.5 - 1.0
     LOG.info('Image load complete, cost time: {:.5f}s'.format(time.time() - t_start))
 
-    input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
+    input_tensor = tf.compat.v1.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
 
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
@@ -94,21 +94,21 @@ def test_lanenet(image_path, weights_path, with_lane_fit=True):
     postprocessor = lanenet_postprocess.LaneNetPostProcessor(cfg=CFG)
 
     # Set sess configuration
-    sess_config = tf.ConfigProto()
+    sess_config = tf.compat.v1.ConfigProto()
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.GPU.GPU_MEMORY_FRACTION
     sess_config.gpu_options.allow_growth = CFG.GPU.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
 
-    sess = tf.Session(config=sess_config)
+    sess = tf.compat.v1.Session(config=sess_config)
 
     # define moving average version of the learned variables for eval
-    with tf.variable_scope(name_or_scope='moving_avg'):
+    with tf.compat.v1.variable_scope(name_or_scope='moving_avg'):
         variable_averages = tf.train.ExponentialMovingAverage(
             CFG.SOLVER.MOVING_AVE_DECAY)
         variables_to_restore = variable_averages.variables_to_restore()
 
     # define saver
-    saver = tf.train.Saver(variables_to_restore)
+    saver = tf.compat.v1.train.Saver(variables_to_restore)
 
     with sess.as_default():
         saver.restore(sess=sess, save_path=weights_path)

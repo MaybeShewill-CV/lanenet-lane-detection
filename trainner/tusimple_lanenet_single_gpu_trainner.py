@@ -68,14 +68,14 @@ class LaneNetTusimpleTrainer(object):
             self._warmup_epoches = 0
 
         # define tensorflow session
-        sess_config = tf.ConfigProto(allow_soft_placement=True)
+        sess_config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.per_process_gpu_memory_fraction = self._cfg.GPU.GPU_MEMORY_FRACTION
         sess_config.gpu_options.allow_growth = self._cfg.GPU.TF_ALLOW_GROWTH
         sess_config.gpu_options.allocator_type = 'BFC'
-        self._sess = tf.Session(config=sess_config)
+        self._sess = tf.compat.v1.Session(config=sess_config)
 
         # define graph input tensor
-        with tf.variable_scope(name_or_scope='graph_input_node'):
+        with tf.compat.v1.variable_scope(name_or_scope='graph_input_node'):
             self._input_src_image, self._input_binary_label_image, self._input_instance_label_image = \
                 self._train_dataset.next_batch(batch_size=self._batch_size)
 
@@ -102,20 +102,20 @@ class LaneNetTusimpleTrainer(object):
 
         # define miou
         if self._enable_miou:
-            with tf.variable_scope('miou'):
+            with tf.compat.v1.variable_scope('miou'):
                 pred = tf.reshape(self._binary_prediciton, [-1, ])
                 gt = tf.reshape(self._input_binary_label_image, [-1, ])
-                indices = tf.squeeze(tf.where(tf.less_equal(gt, self._cfg.DATASET.NUM_CLASSES - 1)), 1)
+                indices = tf.squeeze(tf.compat.v1.where(tf.less_equal(gt, self._cfg.DATASET.NUM_CLASSES - 1)), 1)
                 gt = tf.gather(gt, indices)
                 pred = tf.gather(pred, indices)
-                self._miou, self._miou_update_op = tf.metrics.mean_iou(
+                self._miou, self._miou_update_op = tf.compat.v1.metrics.mean_iou(
                     labels=gt,
                     predictions=pred,
                     num_classes=self._cfg.DATASET.NUM_CLASSES
                 )
 
         # define learning rate
-        with tf.variable_scope('learning_rate'):
+        with tf.compat.v1.variable_scope('learning_rate'):
             self._global_step = tf.Variable(1.0, dtype=tf.float32, trainable=False, name='global_step')
             warmup_steps = tf.constant(
                 self._warmup_epoches * self._steps_per_epoch, dtype=tf.float32, name='warmup_steps'
@@ -126,7 +126,7 @@ class LaneNetTusimpleTrainer(object):
             self._learn_rate = tf.cond(
                 pred=self._global_step < warmup_steps,
                 true_fn=lambda: self._compute_warmup_lr(warmup_steps=warmup_steps, name='warmup_lr'),
-                false_fn=lambda: tf.train.polynomial_decay(
+                false_fn=lambda: tf.compat.v1.train.polynomial_decay(
                     learning_rate=self._init_learning_rate,
                     global_step=self._global_step,
                     decay_steps=train_steps,
@@ -134,77 +134,77 @@ class LaneNetTusimpleTrainer(object):
                     power=self._lr_polynimal_decay_power)
             )
             self._learn_rate = tf.identity(self._learn_rate, 'lr')
-            global_step_update = tf.assign_add(self._global_step, 1.0)
+            global_step_update = tf.compat.v1.assign_add(self._global_step, 1.0)
 
         # define moving average op
-        with tf.variable_scope(name_or_scope='moving_avg'):
+        with tf.compat.v1.variable_scope(name_or_scope='moving_avg'):
             if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
-                    v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
+                    v for v in tf.compat.v1.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
                 ]
             else:
-                train_var_list = tf.trainable_variables()
+                train_var_list = tf.compat.v1.trainable_variables()
             moving_ave_op = tf.train.ExponentialMovingAverage(
-                self._moving_ave_decay).apply(train_var_list + tf.moving_average_variables())
+                self._moving_ave_decay).apply(train_var_list + tf.compat.v1.moving_average_variables())
             # define saver
-            self._loader = tf.train.Saver(tf.moving_average_variables())
+            self._loader = tf.compat.v1.train.Saver(tf.compat.v1.moving_average_variables())
 
         # define training op
-        with tf.variable_scope(name_or_scope='train_step'):
+        with tf.compat.v1.variable_scope(name_or_scope='train_step'):
             if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
-                    v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
+                    v for v in tf.compat.v1.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
                 ]
             else:
-                train_var_list = tf.trainable_variables()
+                train_var_list = tf.compat.v1.trainable_variables()
             if self._optimizer_mode == 'sgd':
-                optimizer = tf.train.MomentumOptimizer(
+                optimizer = tf.compat.v1.train.MomentumOptimizer(
                     learning_rate=self._learn_rate,
                     momentum=self._momentum
                 )
             elif self._optimizer_mode == 'adam':
-                optimizer = tf.train.AdamOptimizer(
+                optimizer = tf.compat.v1.train.AdamOptimizer(
                     learning_rate=self._learn_rate,
                 )
             else:
                 raise ValueError('Not support optimizer: {:s}'.format(self._optimizer_mode))
             optimize_op = optimizer.minimize(self._loss, var_list=train_var_list)
-            with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+            with tf.control_dependencies(tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)):
                 with tf.control_dependencies([optimize_op, global_step_update]):
                     with tf.control_dependencies([moving_ave_op]):
                         self._train_op = tf.no_op()
 
         # define saver and loader
-        with tf.variable_scope('loader_and_saver'):
-            self._net_var = [vv for vv in tf.global_variables() if 'lr' not in vv.name]
-            self._saver = tf.train.Saver(tf.global_variables(), max_to_keep=5)
+        with tf.compat.v1.variable_scope('loader_and_saver'):
+            self._net_var = [vv for vv in tf.compat.v1.global_variables() if 'lr' not in vv.name]
+            self._saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables(), max_to_keep=5)
 
         # define summary
-        with tf.variable_scope('summary'):
+        with tf.compat.v1.variable_scope('summary'):
             summary_merge_list = [
-                tf.summary.scalar('learn_rate', self._learn_rate),
-                tf.summary.scalar('total_loss', self._loss),
-                tf.summary.scalar('binary_seg_loss', self._binary_seg_loss),
-                tf.summary.scalar('discriminative_loss', self._disc_loss),
+                tf.compat.v1.summary.scalar('learn_rate', self._learn_rate),
+                tf.compat.v1.summary.scalar('total_loss', self._loss),
+                tf.compat.v1.summary.scalar('binary_seg_loss', self._binary_seg_loss),
+                tf.compat.v1.summary.scalar('discriminative_loss', self._disc_loss),
             ]
             if self._enable_miou:
                 with tf.control_dependencies([self._miou_update_op]):
                     summary_merge_list_with_miou = [
-                        tf.summary.scalar('learn_rate', self._learn_rate),
-                        tf.summary.scalar('total_loss', self._loss),
-                        tf.summary.scalar('binary_seg_loss', self._binary_seg_loss),
-                        tf.summary.scalar('discriminative_loss', self._disc_loss),
-                        tf.summary.scalar('miou', self._miou)
+                        tf.compat.v1.summary.scalar('learn_rate', self._learn_rate),
+                        tf.compat.v1.summary.scalar('total_loss', self._loss),
+                        tf.compat.v1.summary.scalar('binary_seg_loss', self._binary_seg_loss),
+                        tf.compat.v1.summary.scalar('discriminative_loss', self._disc_loss),
+                        tf.compat.v1.summary.scalar('miou', self._miou)
                     ]
-                    self._write_summary_op_with_miou = tf.summary.merge(summary_merge_list_with_miou)
+                    self._write_summary_op_with_miou = tf.compat.v1.summary.merge(summary_merge_list_with_miou)
             if ops.exists(self._tboard_save_dir):
                 shutil.rmtree(self._tboard_save_dir)
             os.makedirs(self._tboard_save_dir, exist_ok=True)
             model_params_file_save_path = ops.join(self._tboard_save_dir, self._cfg.TRAIN.MODEL_PARAMS_CONFIG_FILE_NAME)
             with open(model_params_file_save_path, 'w', encoding='utf-8') as f_obj:
                 self._cfg.dump_to_json_file(f_obj)
-            self._write_summary_op = tf.summary.merge(summary_merge_list)
-            self._summary_writer = tf.summary.FileWriter(self._tboard_save_dir, graph=self._sess.graph)
+            self._write_summary_op = tf.compat.v1.summary.merge(summary_merge_list)
+            self._summary_writer = tf.compat.v1.summary.FileWriter(self._tboard_save_dir, graph=self._sess.graph)
 
         LOG.info('Initialize tusimple lanenet trainner complete')
 
@@ -215,7 +215,7 @@ class LaneNetTusimpleTrainer(object):
         :param name:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             factor = tf.math.pow(self._init_learning_rate / self._warmup_init_learning_rate, 1.0 / warmup_steps)
             warmup_lr = self._warmup_init_learning_rate * tf.math.pow(factor, self._global_step)
         return warmup_lr
@@ -225,8 +225,8 @@ class LaneNetTusimpleTrainer(object):
 
         :return:
         """
-        self._sess.run(tf.global_variables_initializer())
-        self._sess.run(tf.local_variables_initializer())
+        self._sess.run(tf.compat.v1.global_variables_initializer())
+        self._sess.run(tf.compat.v1.local_variables_initializer())
         if self._cfg.TRAIN.RESTORE_FROM_SNAPSHOT.ENABLE:
             try:
                 LOG.info('=> Restoring weights from: {:s} ... '.format(self._initial_weight))
