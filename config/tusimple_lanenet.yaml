@@ -24,12 +24,12 @@ AUG:
         CONTRAST_JITTER_RATIO: 0.5
         SATURATION_JITTER_RATIO: 0.5
 DATASET:
-    DATA_DIR: 'REPO_ROOT_PATH/data/training_data_example/'
+    DATA_DIR: './data/training_data_example/'
     IMAGE_TYPE: 'rgb'  # choice rgb or rgba
     NUM_CLASSES: 2
-    TEST_FILE_LIST: 'REPO_ROOT_PATH/data/training_data_example/test.txt'
-    TRAIN_FILE_LIST: 'REPO_ROOT_PATH/data/training_data_example/train.txt'
-    VAL_FILE_LIST: 'REPO_ROOT_PATH/data/training_data_example/val.txt'
+    TEST_FILE_LIST: './data/training_data_example/test.txt'
+    TRAIN_FILE_LIST: './data/training_data_example/train.txt'
+    VAL_FILE_LIST: './data/training_data_example/val.txt'
     IGNORE_INDEX: 255
     PADDING_VALUE: [127.5, 127.5, 127.5]
     MEAN_VALUE: [0.5, 0.5, 0.5]
