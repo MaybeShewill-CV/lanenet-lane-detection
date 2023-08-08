@@ -1,0 +1,96 @@
+AUG:
+    RESIZE_METHOD: 'stepscaling' # choice unpadding rangescaling and stepscaling
+    FIX_RESIZE_SIZE: [720, 720] # (width, height), for unpadding
+    INF_RESIZE_VALUE: 500  # for rangescaling
+    MAX_RESIZE_VALUE: 600  # for rangescaling
+    MIN_RESIZE_VALUE: 400  # for rangescaling
+    MAX_SCALE_FACTOR: 2.0  # for stepscaling
+    MIN_SCALE_FACTOR: 0.75  # for stepscaling
+    SCALE_STEP_SIZE: 0.25  # for stepscaling
+    TRAIN_CROP_SIZE: [512, 256]  # crop size for training
+    EVAL_CROP_SIZE: [512, 256]  # crop size for evaluating
+    CROP_PAD_SIZE: 32
+    MIRROR: True
+    FLIP: False
+    FLIP_RATIO: 0.5
+    RICH_CROP:
+        ENABLE: False
+        BLUR: True
+        BLUR_RATIO: 0.2
+        MAX_ROTATION: 15
+        MIN_AREA_RATIO: 0.5
+        ASPECT_RATIO: 0.5
+        BRIGHTNESS_JITTER_RATIO: 0.5
+        CONTRAST_JITTER_RATIO: 0.5
+        SATURATION_JITTER_RATIO: 0.5
+DATASET:
+    DATA_DIR: 'REPO_ROOT_PATH/data/training_data_example/'
+    IMAGE_TYPE: 'rgb'  # choice rgb or rgba
+    NUM_CLASSES: 2
+    TEST_FILE_LIST: 'REPO_ROOT_PATH/data/training_data_example/test.txt'
+    TRAIN_FILE_LIST: 'REPO_ROOT_PATH/data/training_data_example/train.txt'
+    VAL_FILE_LIST: 'REPO_ROOT_PATH/data/training_data_example/val.txt'
+    IGNORE_INDEX: 255
+    PADDING_VALUE: [127.5, 127.5, 127.5]
+    MEAN_VALUE: [0.5, 0.5, 0.5]
+    STD_VALUE: [0.5, 0.5, 0.5]
+    CPU_MULTI_PROCESS_NUMS: 8
+FREEZE:
+    MODEL_FILENAME: 'model'
+    PARAMS_FILENAME: 'params'
+MODEL:
+    MODEL_NAME: 'lanenet'
+    FRONT_END: 'bisenetv2'
+    EMBEDDING_FEATS_DIMS: 4
+    BISENETV2:
+        GE_EXPAND_RATIO: 6
+        SEMANTIC_CHANNEL_LAMBDA: 0.25
+        SEGHEAD_CHANNEL_EXPAND_RATIO: 2
+TEST:
+    TEST_MODEL: 'model/cityscapes/final'
+TRAIN:
+    MODEL_SAVE_DIR: 'model/tusimple/'
+    TBOARD_SAVE_DIR: 'tboard/tusimple/'
+    MODEL_PARAMS_CONFIG_FILE_NAME: "model_train_config.json"
+    RESTORE_FROM_SNAPSHOT:
+        ENABLE: False
+        SNAPSHOT_PATH: ''
+    SNAPSHOT_EPOCH: 8
+    BATCH_SIZE: 32
+    VAL_BATCH_SIZE: 4
+    EPOCH_NUMS: 905
+    WARM_UP:
+        ENABLE: True
+        EPOCH_NUMS: 8
+    FREEZE_BN:
+        ENABLE: False
+    COMPUTE_MIOU:
+        ENABLE: True
+        EPOCH: 1
+    MULTI_GPU:
+        ENABLE: True
+        GPU_DEVICES: ['0', '1']
+        CHIEF_DEVICE_INDEX: 0
+SOLVER:
+    LR: 0.001
+    LR_POLICY: 'poly'
+    LR_POLYNOMIAL_POWER: 0.9
+    OPTIMIZER: 'sgd'
+    MOMENTUM: 0.9
+    WEIGHT_DECAY: 0.0005
+    MOVING_AVE_DECAY: 0.9995
+    LOSS_TYPE: 'cross_entropy'
+    OHEM:
+        ENABLE: False
+        SCORE_THRESH: 0.65
+        MIN_SAMPLE_NUMS: 65536
+GPU:
+    GPU_MEMORY_FRACTION: 0.9
+    TF_ALLOW_GROWTH: True
+POSTPROCESS:
+    MIN_AREA_THRESHOLD: 100
+    DBSCAN_EPS: 0.35
+    DBSCAN_MIN_SAMPLES: 1000
+LOG:
+    SAVE_DIR: './log'
+    LEVEL: INFO
