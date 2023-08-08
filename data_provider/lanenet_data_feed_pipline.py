@@ -13,17 +13,20 @@ import glob
 import os
 import os.path as ops
 import random
+import sys
 
 import numpy as np
 import tensorflow as tf
 import loguru
+
+current_directory = os.getcwd()
+sys.path.append(current_directory)
 
 from local_utils.config_utils import parse_config_utils
 from data_provider import tf_io_pipline_tools
 
 CFG = parse_config_utils.lanenet_cfg
 LOG = loguru.logger
-
 
 class LaneNetDataProducer(object):
     """
@@ -40,7 +43,7 @@ class LaneNetDataProducer(object):
         self._test_example_index_file_path = CFG.DATASET.TEST_FILE_LIST
         self._val_example_index_file_path = CFG.DATASET.VAL_FILE_LIST
 
-        self._gt_image_dir = ops.join(self._dataset_dir, 'gt_image')
+        self._gt_image_dir = ops.join(self._dataset_dir, 'image')
         self._gt_binary_image_dir = ops.join(self._dataset_dir, 'gt_binary_image')
         self._gt_instance_image_dir = ops.join(self._dataset_dir, 'gt_instance_image')
 
@@ -88,6 +91,8 @@ class LaneNetDataProducer(object):
 
         # collecting train images paths info
         train_image_paths_info = _read_training_example_index_file(self._train_example_index_file_path)
+
+        #print("train_image_paths_info: ",train_image_paths_info)
         train_gt_images_paths = train_image_paths_info['gt_path_info']
         train_gt_binary_images_paths = train_image_paths_info['gt_binary_path_info']
         train_gt_instance_images_paths = train_image_paths_info['gt_instance_path_info']
@@ -309,28 +314,37 @@ class LaneNetDataFeeder(object):
 
                 iterator = tf.compat.v1.data.make_one_shot_iterator(dataset)
 
-        return iterator.get_next(name='{:s}_IteratorGetNext'.format(self._dataset_flags))
+        #return iterator.get_next(name='{:s}_IteratorGetNext'.format(self._dataset_flags))
+        return iterator.get_next()
 
 
-if __name__ == '__main__':
-    """
-    test code
-    """
-    train_dataset = LaneNetDataFeeder(flags='train')
 
-    src_images, binary_label_images, instance_label_images = train_dataset.next_batch(batch_size=8)
-
-    count = 1
-    with tf.compat.v1.Session() as sess:
-        while True:
-            try:
-                t_start = time.time()
-                images, binary_labels, instance_labels = sess.run(
-                    [src_images, binary_label_images, instance_label_images]
-                )
-                print('Iter: {:d}, cost time: {:.5f}s'.format(count, time.time() - t_start))
-                count += 1
-                src_image = np.array((images[0] + 1.0) * 127.5, dtype=np.uint8)
-            except tf.errors.OutOfRangeError as err:
-                print(err)
-                raise err
+train_dataset = LaneNetDataFeeder(flags='train')
+train_dataset.next_batch(batch_size=8)
+src_images, binary_label_images, instance_label_images = train_dataset.next_batch(batch_size=8)
+print("Shape of src_images:", src_images.shape)
+print("Shape of binary_label_images:", binary_label_images.shape)
+print("Shape of instance_label_images:", instance_label_images.shape)
+##if __name__ == '__main__':
+#    """
+#    test code
+#    """
+#    train_dataset = LaneNetDataFeeder(flags='train')
+#
+#    src_images, binary_label_images, instance_label_images = train_dataset.next_batch(batch_size=8)
+#
+#    count = 1
+#    with tf.compat.v1.Session() as sess:
+#        while True:
+#            try:
+#                t_start = time.time()
+#                images, binary_labels, instance_labels = sess.run(
+#                    [src_images, binary_label_images, instance_label_images]
+#                )
+#                print('Iter: {:d}, cost time: {:.5f}s'.format(count, time.time() - t_start))
+#                count += 1
+#                src_image = np.array((images[0] + 1.0) * 127.5, dtype=np.uint8)
+#            except tf.errors.OutOfRangeError as err:
+#                print(err)
+#                raise err
+#
