@@ -19,9 +19,6 @@ import numpy as np
 import tensorflow as tf
 import loguru
 
-current_directory = os.getcwd()
-sys.path.append(current_directory)
-
 from local_utils.config_utils import parse_config_utils
 from data_provider import tf_io_pipline_tools
 
@@ -316,35 +313,3 @@ class LaneNetDataFeeder(object):
 
         #return iterator.get_next(name='{:s}_IteratorGetNext'.format(self._dataset_flags))
         return iterator.get_next()
-
-
-
-train_dataset = LaneNetDataFeeder(flags='train')
-train_dataset.next_batch(batch_size=8)
-src_images, binary_label_images, instance_label_images = train_dataset.next_batch(batch_size=8)
-print("Shape of src_images:", src_images.shape)
-print("Shape of binary_label_images:", binary_label_images.shape)
-print("Shape of instance_label_images:", instance_label_images.shape)
-##if __name__ == '__main__':
-#    """
-#    test code
-#    """
-#    train_dataset = LaneNetDataFeeder(flags='train')
-#
-#    src_images, binary_label_images, instance_label_images = train_dataset.next_batch(batch_size=8)
-#
-#    count = 1
-#    with tf.compat.v1.Session() as sess:
-#        while True:
-#            try:
-#                t_start = time.time()
-#                images, binary_labels, instance_labels = sess.run(
-#                    [src_images, binary_label_images, instance_label_images]
-#                )
-#                print('Iter: {:d}, cost time: {:.5f}s'.format(count, time.time() - t_start))
-#                count += 1
-#                src_image = np.array((images[0] + 1.0) * 127.5, dtype=np.uint8)
-#            except tf.errors.OutOfRangeError as err:
-#                print(err)
-#                raise err
-#
