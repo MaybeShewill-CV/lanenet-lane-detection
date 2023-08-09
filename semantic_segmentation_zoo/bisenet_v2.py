@@ -9,12 +9,9 @@
 BiseNet V2 Model
 """
 import collections
-
 import tensorflow as tf
-
 from semantic_segmentation_zoo import cnn_basenet
 from local_utils.config_utils import parse_config_utils
-
 
 class _StemBlock(cnn_basenet.CNNBaseModel):
     """
@@ -136,7 +133,6 @@ class _StemBlock(cnn_basenet.CNNBaseModel):
             )
         return result
 
-
 class _ContextEmbedding(cnn_basenet.CNNBaseModel):
     """
     implementation of context embedding module in bisenetv2
@@ -205,7 +201,7 @@ class _ContextEmbedding(cnn_basenet.CNNBaseModel):
         if 'padding' in kwargs:
             self._padding = kwargs['padding']
         with tf.compat.v1.variable_scope(name_or_scope=name_scope):
-            result = tf.reduce_mean(input_tensor, axis=[1, 2], keepdims=True, name='global_avg_pooling')
+            result = tf.reduce_mean(input_tensor=input_tensor, axis=[1, 2], keepdims=True, name='global_avg_pooling')
             result = self.layerbn(result, self._is_training, 'bn')
             result = self._conv_block(
                 input_tensor=result,
@@ -1042,13 +1038,13 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
 
     def build_model(self, input_tensor, name, reuse=False):
         """
-
         :param input_tensor:
         :param name:
         :param reuse:
         :return:
         """
         with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
+
             # build detail branch
             detail_branch_output = self.build_detail_branch(
                 input_tensor=input_tensor,
@@ -1086,14 +1082,17 @@ class BiseNetV2(cnn_basenet.CNNBaseModel):
             }
         return self._net_intermediate_results
 
-
 if __name__ == '__main__':
     """
-    test code
-    """
-    test_in_tensor = tf.compat.v1.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
+#    test code
+#    """
+    test_in_tensor = tf.constant(value=0.0, dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
+    num_lanes = 4
+    num_lanes = tf.cast(num_lanes, dtype=tf.int32)
+    num_lanes_encoded = tf.one_hot(num_lanes, depth=256)
+    num_lanes_encoded = tf.expand_dims(num_lanes_encoded, axis=0)
+
     model = BiseNetV2(phase='train', cfg=parse_config_utils.lanenet_cfg)
-    ret = model.build_model(test_in_tensor, name='bisenetv2')
+    ret = model.build_model(test_in_tensor, num_lanes_encoded, name='bisenetv2')
     for layer_name, layer_info in ret.items():
         print('layer name: {:s} shape: {}'.format(layer_name, layer_info['shape']))
-
