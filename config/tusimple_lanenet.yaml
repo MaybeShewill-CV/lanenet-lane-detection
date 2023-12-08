@@ -23,6 +23,7 @@ AUG:
         BRIGHTNESS_JITTER_RATIO: 0.5
         CONTRAST_JITTER_RATIO: 0.5
         SATURATION_JITTER_RATIO: 0.5
+        # today is 8.12.2023
 DATASET:
     DATA_DIR: 'REPO_ROOT_PATH/data/training_data_example/'
     IMAGE_TYPE: 'rgb'  # choice rgb or rgba
